@@ -147,6 +147,18 @@ header button,.ibtn{color:#111!important}
 .wgrp .nm::after{display:none!important}
 .rup{cursor:pointer}
 #chatsList .item:first-child:not(.wgrp) .nm::after{display:inline-block}
+#app.dm{filter:invert(1) hue-rotate(180deg)}
+#app.dm img,#app.dm video,#app.dm .av,#app.dm #pAv{filter:invert(1) hue-rotate(180deg)}
+#main header{gap:20px!important;padding:14px 18px 6px!important;align-items:center}
+#main header .title{color:#1fa855!important;font-size:30px!important;font-weight:800;letter-spacing:-1px}
+#main header button{padding:0!important;display:flex;align-items:center}
+#main header svg{width:30px;height:30px;fill:#111}
+.rupC{width:30px;height:30px;border:2.5px solid #111;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;color:#111}
+#searchWrap{position:relative;padding:10px 18px 12px!important}
+#searchBox{background:#f4f3f1!important;padding:15px 20px 15px 54px!important;font-size:17px;border-radius:30px!important;outline:none}
+#searchWrap .sIc{position:absolute;left:40px;top:50%;transform:translateY(-50%);width:24px;height:24px;fill:#5f6b73;pointer-events:none}
+#app.dm{filter:invert(1) hue-rotate(180deg)}
+#app.dm img,#app.dm video,#app.dm .av,#app.dm #pAv{filter:invert(1) hue-rotate(180deg)}
 </style>
 </head>
 <body>
@@ -169,12 +181,18 @@ header button,.ibtn{color:#111!important}
 
 <!-- মেইন স্ক্রিন -->
 <div id="main" class="hide">
-  <header>
+    <header>
     <span class="title">Friends Chat</span>
-    <button id="myProfile" title="প্রোফাইল">👤</button>
-    <button id="logout" title="Logout">⎋</button>
+    <button id="rupeeBtn" title="UPI"><span class="rupC">₹</span></button>
+    <button id="storyCamBtn" title="স্ট্যাটাস"><svg viewBox="0 0 24 24"><path d="M9 2 7.2 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.2L15 2zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg></button>
+    <button id="mainMenuBtn" title="মেনু"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+    <button id="myProfile" class="hide">👤</button>
+    <button id="logout" class="hide">⎋</button>
   </header>
-  <div id="searchWrap"><input id="searchBox" placeholder="সার্চ করো..."></div>
+  <div id="searchWrap">
+    <svg class="sIc" viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>
+    <input id="searchBox" placeholder="Search">
+  </div>
   <div id="statusRow"></div>
   <div class="list" id="chatsList"></div>
   <div class="list hide" id="storiesList"></div>
@@ -1583,6 +1601,179 @@ $("back").addEventListener("click", () => clearInterval(statusTimer));
     mk("📷 My photo", () => pick.click());
     mk("✖ Remove photo", () => { try { localStorage.removeItem(key()); } catch (e) {} apply(); });
   }).observe(roomEl2, { childList: true });
+})();
+ // ===== মেইন স্ক্রিনের বাটন =====
+(function () {
+  const $ = (i) => document.getElementById(i);
+  const appEl = $("app");
+  const LS = {
+    get: (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  function toast(m) {
+    const t = document.createElement("div");
+    t.textContent = m;
+    t.style.cssText = "position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:20px;z-index:90;font-size:15px;text-align:center";
+    appEl.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+  }
+
+  function panel(title, build) {
+    const old = $("mPanel"); if (old) old.remove();
+    const p = document.createElement("div");
+    p.id = "mPanel";
+    p.style.cssText = "position:absolute;inset:0;background:#fff;color:#111;z-index:60;display:flex;flex-direction:column";
+    const h = document.createElement("div");
+    h.style.cssText = "display:flex;align-items:center;gap:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.2);font-size:19px;font-weight:bold";
+    const b = document.createElement("span");
+    b.textContent = "←"; b.style.cssText = "font-size:26px;cursor:pointer"; b.onclick = () => p.remove();
+    const t = document.createElement("span"); t.textContent = title;
+    h.append(b, t);
+    const body = document.createElement("div");
+    body.style.cssText = "flex:1;overflow-y:auto;padding:14px 16px";
+    p.append(h, body);
+    appEl.appendChild(p);
+    build(body, p);
+  }
+
+  const inputCss = "width:100%;padding:13px;border:1px solid #ccc;border-radius:8px;font-size:16px;margin-bottom:12px";
+  const btnCss = "width:100%;padding:14px;margin-top:10px;background:#1fa855;color:#fff;border:none;border-radius:8px;font-size:17px";
+
+  // ---------- ₹ Payments ----------
+  $("rupeeBtn").onclick = () => {
+    panel("Payments", (body) => {
+      const mk = (ph, type) => { const i = document.createElement("input"); i.placeholder = ph; if (type) i.type = type; i.style.cssText = inputCss; return i; };
+      const upi = mk("UPI ID (যেমন name@upi)");
+      const am = mk("টাকার অঙ্ক", "number");
+      const nt = mk("নোট (ঐচ্ছিক)");
+      const saved = LS.get("upi_saved", []);
+      body.append(upi, am, nt);
+      if (saved.length) {
+        const lb = document.createElement("div");
+        lb.textContent = "আগে পাঠানো:"; lb.style.cssText = "color:#667781;font-size:14px;margin:4px 0 8px";
+        body.appendChild(lb);
+        saved.forEach((s) => {
+          const c = document.createElement("div");
+          c.textContent = s;
+          c.style.cssText = "display:inline-block;margin:0 8px 8px 0;padding:8px 14px;background:#f0f2f5;border-radius:20px;font-size:15px;cursor:pointer";
+          c.onclick = () => { upi.value = s; };
+          body.appendChild(c);
+        });
+      }
+      const btn = document.createElement("button");
+      btn.textContent = "Pay";
+      btn.style.cssText = btnCss;
+      btn.onclick = () => {
+        const u = upi.value.trim(), a = am.value.trim();
+        if (!u || !u.includes("@")) { toast("সঠিক UPI ID লেখো"); return; }
+        if (!a || isNaN(a) || Number(a) <= 0) { toast("টাকার অঙ্ক লেখো"); return; }
+        LS.set("upi_saved", [u, ...saved.filter((x) => x !== u)].slice(0, 5));
+        location.href = "upi://pay?pa=" + encodeURIComponent(u) + "&pn=" + encodeURIComponent(u.split("@")[0]) + "&am=" + encodeURIComponent(a) + "&tn=" + encodeURIComponent(nt.value.trim()) + "&cu=INR";
+      };
+      body.appendChild(btn);
+    });
+  };
+
+  // ---------- ক্যামেরা: ছবি তুলে স্টোরিতে ----------
+  $("storyCamBtn").onclick = () => {
+    const sf = $("storyFile");
+    sf.setAttribute("capture", "environment");
+    sf.click();
+    setTimeout(() => sf.removeAttribute("capture"), 800);
+  };
+
+  // ---------- New group ----------
+  function newGroup() {
+    panel("New group", (body, p) => {
+      const name = document.createElement("input");
+      name.placeholder = "গ্রুপের নাম"; name.maxLength = 40; name.style.cssText = inputCss;
+      const list = document.createElement("div");
+      const btn = document.createElement("button");
+      btn.textContent = "গ্রুপ বানাও"; btn.style.cssText = btnCss;
+      body.append(name, list, btn);
+      const picked = new Set();
+      getDocs(collection(db, "users")).then((snap) => {
+        snap.forEach((d) => {
+          const u = d.data();
+          if (u.uid === me.uid) return;
+          const r = document.createElement("label");
+          r.style.cssText = "display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eee;font-size:17px";
+          const cb = document.createElement("input");
+          cb.type = "checkbox"; cb.style.cssText = "width:20px;height:20px";
+          cb.onchange = () => { cb.checked ? picked.add(u.uid) : picked.delete(u.uid); };
+          const s = document.createElement("span"); s.textContent = u.name || "বন্ধু";
+          r.append(cb, s); list.appendChild(r);
+        });
+      }).catch((e) => { list.textContent = "লোড হয়নি: " + e.message; });
+      btn.onclick = async () => {
+        const nm = name.value.trim();
+        if (!nm) { toast("নাম লেখো"); return; }
+        if (!picked.size) { toast("অন্তত একজনকে বাছাই করো"); return; }
+        try {
+          const ref = await addDoc(collection(db, "groups"), { name: nm, members: [me.uid, ...picked], createdBy: me.uid, createdAt: serverTimestamp() });
+          p.remove();
+          openRoom("grp_" + ref.id, nm, null);
+        } catch (e) {
+          alert("গ্রুপ বানানো যায়নি: " + e.message);
+        }
+      };
+    });
+  }
+
+  // ---------- ডার্ক মোড ----------
+  const setDark = (on) => { appEl.classList.toggle("dm", on); LS.set("darkmode", on); };
+  setDark(LS.get("darkmode", false));
+
+  // ---------- ইনস্টল ----------
+  let dip = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); dip = e; });
+  function installApp() {
+    if (window.matchMedia("(display-mode: standalone)").matches) { toast("অ্যাপ আগেই ইনস্টল করা আছে"); return; }
+    if (dip) { dip.prompt(); dip = null; return; }
+    alert("Chrome-এর ⋮ মেনু খুলে 'Add to Home screen' বা 'Install app' চাপো");
+  }
+
+  // ---------- আমন্ত্রণ ----------
+  function invite() {
+    const url = location.origin + location.pathname;
+    if (navigator.share) {
+      navigator.share({ title: "Friends Chat", text: "আমার সাথে Friends Chat-এ চ্যাট করো", url }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => toast("লিংক কপি হয়েছে"));
+    } else {
+      prompt("এই লিংক বন্ধুকে পাঠাও", url);
+    }
+  }
+
+  // ---------- থ্রি ডট মেনু ----------
+  const menu = document.createElement("div");
+  menu.style.cssText = "display:none;position:absolute;top:62px;right:12px;background:#fff;color:#111;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.3);z-index:50;min-width:230px;padding:6px 0";
+  $("main").appendChild(menu);
+  function buildMenu() {
+    menu.innerHTML = "";
+    const items = [
+      ["New group", newGroup],
+      ["Invite friends", invite],
+      [appEl.classList.contains("dm") ? "Light mode" : "Dark mode", () => setDark(!appEl.classList.contains("dm"))],
+      ["Install app", installApp],
+      ["প্রোফাইল", () => $("myProfile").click()],
+      ["Logout", () => { if (confirm("Logout করবে?")) signOut(auth); }]
+    ];
+    items.forEach(([label, fn]) => {
+      const d = document.createElement("div");
+      d.textContent = label;
+      d.style.cssText = "padding:16px 22px;font-size:17px;cursor:pointer";
+      d.onclick = () => { menu.style.display = "none"; fn(); };
+      menu.appendChild(d);
+    });
+  }
+  $("mainMenuBtn").onclick = (e) => {
+    e.stopPropagation();
+    if (menu.style.display === "block") { menu.style.display = "none"; return; }
+    buildMenu(); menu.style.display = "block";
+  };
+  document.addEventListener("click", () => { menu.style.display = "none"; });
 })();
   </script>
 </body>
