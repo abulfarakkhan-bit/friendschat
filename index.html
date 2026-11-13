@@ -437,7 +437,7 @@ const friendData = friendSnap.exists() ? friendSnap.data() : {};
 
 $("roomPhoto").src = friendData.photo || "";
 $("roomPhoto").style.display = friendData.photo ? "block" : "none";
-$("roomStatus").textContent = "অনলাইন";
+watchStatus(other);
   $("roomName").classList.toggle("vb", !!other);
   $("room").classList.remove("hide");
 
@@ -1047,6 +1047,37 @@ mic.addEventListener("mouseup", stopRec);
   new MutationObserver(keep).observe(list, { childList: true });
   keep();
 })();
-</script>
+// ===== অনলাইন / সর্বশেষ দেখা =====
+setInterval(() => {
+  if (me && !document.hidden) setDoc(doc(db, "users", me.uid), { lastSeen: Date.now() }, { merge: true });
+}, 20000);
+
+function lastSeenText(ts) {
+  const ms = typeof ts === "number" ? ts : (ts && ts.toMillis ? ts.toMillis() : 0);
+  if (!ms) return { online: false, text: "অফলাইন" };
+  if (Date.now() - ms < 60000) return { online: true, text: "● অনলাইন" };
+  const d = new Date(ms);
+  const t = d.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" });
+  const same = d.toDateString() === new Date().toDateString();
+  const day = same ? "আজ " : d.toLocaleDateString("bn-BD") + " ";
+  return { online: false, text: "সর্বশেষ দেখা " + day + t };
+}
+
+let statusTimer = null;
+function watchStatus(uid) {
+  clearInterval(statusTimer);
+  const el = $("roomStatus");
+  if (!uid) { el.textContent = ""; return; }
+  const refresh = async () => {
+    const s = await getDoc(doc(db, "users", uid));
+    const r = lastSeenText(s.exists() ? s.data().lastSeen : null);
+    el.textContent = r.text;
+    el.style.color = r.online ? "#34b7f1" : "#d0e0dd";
+  };
+  refresh();
+  statusTimer = setInterval(refresh, 15000);
+}
+$("back").addEventListener("click", () => clearInterval(statusTimer));
+  </script>
 </body>
 </html>
