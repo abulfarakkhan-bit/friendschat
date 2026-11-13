@@ -58,6 +58,8 @@ header button,.ibtn{background:transparent;border:none;color:#fff;font-size:20px
 #inviteBtn .invT{font-weight:bold;font-size:17px}
 #inviteBtn .invS{font-size:14px;color:#667781} 
   #form{padding-bottom:60px!important}
+  #form{padding-bottom:8px!important}
+.bar{position:relative}
 #bottomNav{padding-bottom:60px!important}
   .item .nm::after,.msg .n::after,#roomName.vb::after{content:"✔";display:inline-block;width:15px;height:15px;line-height:15px;font-size:10px;text-align:center;color:#fff;background:#1d9bf0;border-radius:50%;margin-left:5px;vertical-align:middle}
 #chatsList .item:first-child .nm::after{display:none}
@@ -115,6 +117,7 @@ header button,.ibtn{color:#111!important}
 .bar button{width:48px;height:48px;background:#1fa855}
 #header button svg{display:block}
 #room header{align-items:center}
+.bar #sendBtn.hide{display:none!important}
 </style>
 </head>
 <body>
@@ -241,6 +244,14 @@ window.addEventListener("error", function (e) {
 });
 window.addEventListener("unhandledrejection", function (e) {
   alert("এরর: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
+});
+const txtEl = document.getElementById("txt");
+const sendEl = document.getElementById("sendBtn");
+const micEl = document.getElementById("micBtn");
+txtEl.addEventListener("input", () => {
+  const has = txtEl.value.trim().length > 0;
+  sendEl.classList.toggle("hide", !has);
+  micEl.classList.toggle("hide", has);
 });
 </script>
   <script type="module">
