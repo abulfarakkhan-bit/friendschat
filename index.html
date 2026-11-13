@@ -245,14 +245,47 @@ window.addEventListener("error", function (e) {
 window.addEventListener("unhandledrejection", function (e) {
   alert("এরর: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
 });
+// ===== মাইক ↔ সেন্ড বাটন =====
 const txtEl = document.getElementById("txt");
 const sendEl = document.getElementById("sendBtn");
 const micEl = document.getElementById("micBtn");
-txtEl.addEventListener("input", () => {
+function syncBtns() {
   const has = txtEl.value.trim().length > 0;
   sendEl.classList.toggle("hide", !has);
   micEl.classList.toggle("hide", has);
+}
+txtEl.addEventListener("input", syncBtns);
+setInterval(syncBtns, 250);
+syncBtns();
+
+// ===== থ্রি ডট মেনু =====
+const menuBtn = document.getElementById("menuBtn");
+const roomEl = document.getElementById("room");
+const menu = document.createElement("div");
+menu.style.cssText = "display:none;position:absolute;top:58px;right:10px;background:#fff;color:#111;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:50;min-width:210px;overflow:hidden";
+const options = [
+  ["👤 প্রোফাইল দেখো", () => document.getElementById("roomHeader").click()],
+  ["🔍 চ্যাটে খোঁজো", () => {
+    const q = prompt("কী খুঁজবে? (সব দেখতে খালি রেখে OK চাপো)") || "";
+    document.querySelectorAll("#msgs .msg").forEach((m) => {
+      m.style.display = m.textContent.toLowerCase().includes(q.toLowerCase()) ? "" : "none";
+    });
+  }],
+  ["🧹 স্ক্রিন পরিষ্কার করো", () => { document.getElementById("msgs").innerHTML = ""; }]
+];
+options.forEach(([label, fn]) => {
+  const d = document.createElement("div");
+  d.textContent = label;
+  d.style.cssText = "padding:14px 18px;font-size:16px;cursor:pointer;border-bottom:1px solid #f0f0f0";
+  d.onclick = () => { menu.style.display = "none"; fn(); };
+  menu.appendChild(d);
 });
+roomEl.appendChild(menu);
+menuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  menu.style.display = menu.style.display === "none" ? "block" : "none";
+});
+document.addEventListener("click", () => { menu.style.display = "none"; });
 </script>
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
