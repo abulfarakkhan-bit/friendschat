@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#075e54">
+<title>Friends Chat</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111b21;color:#e9edef;font-family:Arial,sans-serif}button,input,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;background:#00a884;color:#062e27;font-weight:700}.hide{display:none!important}#app{max-width:520px;margin:auto;height:100dvh;background:#efeae2;color:#111;display:flex;flex-direction:column;position:relative;overflow:hidden}header{background:#075e54;color:white;padding:14px;display:flex;align-items:center;gap:12px;min-height:58px}header strong{font-size:19px;flex:1}header button{background:transparent;color:white;padding:7px;font-size:20px}#login{margin:auto;width:90%;max-width:360px;background:white;color:#111;padding:22px;border-radius:14px;text-align:center}#login input{width:100%;padding:12px;margin:7px 0;border:1px solid #bbb;border-radius:8px}.tabs{display:flex;background:#075e54;color:#cde4df}.tab{flex:1;text-align:center;padding:13px 4px;cursor:pointer}.tab.active{color:white;border-bottom:3px solid white}.panel{flex:1;overflow:auto;background:#fff}.item{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #eee;cursor:pointer}.avatar{width:46px;height:46px;border-radius:50%;background:#d9eee8;color:#075e54;display:grid;place-items:center;font-weight:bold;flex:none;background-size:cover;background-position:center}.meta{flex:1;min-width:0}.sub{font-size:13px;color:#667781;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fab{position:absolute;right:18px;bottom:22px;border-radius:50%;width:54px;height:54px;font-size:23px;box-shadow:0 2px 8px #777}.room{position:absolute;inset:0;background:#efeae2;display:flex;flex-direction:column;z-index:4}.roomhead{background:#075e54;color:white;padding:9px;display:flex;align-items:center;gap:10px}.roomhead button{background:transparent;color:white}.messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:7px;background:linear-gradient(#e9e4dc,#e9e4dc)}.msg{max-width:82%;padding:8px 10px;border-radius:9px;background:white;align-self:flex-start;overflow-wrap:anywhere;box-shadow:0 1px 1px #bbb}.msg.mine{align-self:flex-end;background:#d9fdd3}.msg small{display:block;color:#667781;font-size:10px;margin-bottom:3px}.msg img,.msg video{max-width:100%;border-radius:7px}.composer{display:flex;gap:6px;padding:8px;background:#f0f2f5}.composer input{flex:1;min-width:0;border:0;border-radius:22px;padding:12px}.overlay{position:absolute;inset:0;background:#fff;color:#111;z-index:7;display:flex;flex-direction:column}.overlay main{padding:16px;overflow:auto}.overlay input,.overlay textarea{width:100%;padding:12px;margin:7px 0;border:1px solid #bbb;border-radius:8px}.statusring{border:3px solid #25d366}.muted{color:#667781;font-size:13px}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="login">
+    <h2>Friends Chat</h2><p class="muted">বন্ধুদের সঙ্গে চ্যাট করুন</p>
+    <button id="googleBtn" style="width:100%;margin:5px 0">Google দিয়ে লগইন</button>
+    <button id="facebookBtn" style="width:100%;margin:5px 0;background:#1877f2;color:white">Facebook দিয়ে লগইন</button>
+    <input id="phone" placeholder="+91 ফোন নম্বর">
+    <div id="recaptcha"></div>
+    <button id="sendOtp" style="width:100%">OTP পাঠান</button>
+    <input id="otp" placeholder="OTP লিখুন">
+    <button id="verifyOtp" style="width:100%">OTP যাচাই</button>
+    <p id="loginMsg" class="muted"></p>
+  </section>
+  <section id="main" class="hide" style="display:flex;flex-direction:column;flex:1;min-height:0">
+    <header><strong>Friends Chat</strong><button id="searchBtn" aria-label="Search">⌕</button><button id="myProfile" aria-label="Profile">●</button><button id="settingsBtn" aria-label="Settings">⋮</button></header>
+    <nav class="tabs"><div class="tab active" data-tab="chats">চ্যাট</div><div class="tab" data-tab="status">স্ট্যাটাস</div><div class="tab" data-tab="calls">কল</div><div class="tab" data-tab="groups">গ্রুপ</div></nav>
+    <div id="chatsPanel" class="panel"></div><div id="statusPanel" class="panel hide"></div><div id="callsPanel" class="panel hide"></div><div id="groupsPanel" class="panel hide"></div>
+    <button id="newChat" class="fab">＋</button>
+  </section>
+  <section id="room" class="room hide">
+    <div class="roomhead"><button id="backRoom">‹</button><div class="avatar" id="roomAv">F</div><div style="flex:1"><b id="roomTitle">Chat</b><div id="roomSub" style="font-size:12px">Friends Chat</div></div><button id="voiceCall">☎</button><button id="videoCall">▣</button><button id="roomMenu">⋮</button></div>
+    <div id="messages" class="messages"></div>
+    <div class="composer"><label style="padding:10px;cursor:pointer">＋<input id="mediaFile" type="file" accept="image/*,video/*" hidden></label><input id="messageText" placeholder="মেসেজ লিখুন"><button id="sendMessage">➤</button></div>
+  </section>
+  <section id="profile" class="overlay hide"><header><button id="closeProfile">‹</button><strong>প্রোফাইল</strong></header><main><div class="avatar" id="profileAvatar" style="width:90px;height:90px;margin:10px auto;font-size:28px">F</div><input id="profilePhoto" type="file" accept="image/*"><label>নাম</label><input id="profileName"><label>Bio</label><textarea id="profileBio" rows="3"></textarea><button id="saveProfile" style="width:100%">সেভ করুন</button><p id="profileMsg" class="muted"></p></main></section>
+  <section id="settings" class="overlay hide"><header><button id="closeSettings">‹</button><strong>Settings</strong></header><main><div class="item" id="themeToggle">🌙 ডার্ক/লাইট থিম বদলান</div><div class="item" id="privacyInfo">🔒 Privacy ও নিরাপত্তা</div><div class="item" id="signOut">লগআউট</div><p class="muted">Friends Chat — ব্যক্তিগত প্রজেক্ট, WhatsApp-এর অফিসিয়াল অ্যাপ নয়।</p></main></section>
+  <section id="callScreen" class="overlay hide"><header><button id="endCall">কল শেষ</button><strong id="callLabel">কল চলছে</strong></header><main style="background:#17252d;color:white;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center"><video id="remoteVideo" autoplay playsinline style="width:100%;max-height:55%;background:#222"></video><video id="localVideo" autoplay muted playsinline style="width:110px;position:absolute;right:15px;top:75px;background:#333"></video><p id="callStatus">সংযোগ হচ্ছে…</p><div style="display:flex;gap:10px"><button id="muteBtn">মাইক</button><button id="camBtn">ক্যামেরা</button></div></main></section>
+</div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {getAuth,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup,signInWithPhoneNumber,RecaptchaVerifier,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {getFirestore,doc,setDoc,getDoc,collection,addDoc,onSnapshot,query,orderBy,serverTimestamp,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+ apiKey:"AIzaSyD40E1QifHt5xQU935KOtfzi1wORCgvJrk",
+ authDomain:"friendschat-8a7fc.firebaseapp.com",
+ projectId:"friendschat-8a7fc",
+ storageBucket:"friendschat-8a7fc.firebasestorage.app",
+ messagingSenderId:"14697970142",
+ appId:"1:14697970142:web:137bb152271d8bd7fc454f",
+ measurementId:"G-4YHFYRRCJG"
+};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
+const $=id=>document.getElementById(id);
+let me=null,roomId=null,roomUnsub=null,usersUnsub=null,storiesUnsub=null,callUnsubs=[],pc=null,localStream=null,callDocRef=null,confirmation=null,recaptcha=null,activeTab="chats",newPhoto=null;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function show(id){$(id).classList.remove("hide")}function hide(id){$(id).classList.add("hide")}
+function avatar(el,name,photo){el.style.backgroundImage=photo?`url("${photo}")`:"none";el.textContent=photo?"":(name||"?").slice(0,1).toUpperCase()}
+function roomKey(a,b){return [a,b].sort().join("_")}
+$("googleBtn").onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>$("loginMsg").textContent=e.message);
+$("facebookBtn").onclick=()=>signInWithPopup(auth,new FacebookAuthProvider()).catch(e=>$("loginMsg").textContent=e.message);
+$("sendOtp").onclick=async()=>{try{if(!recaptcha)recaptcha=new RecaptchaVerifier(auth,"recaptcha",{});confirmation=await signInWithPhoneNumber(auth,$("phone").value,recaptcha);$("loginMsg").textContent="OTP পাঠানো হয়েছে";}catch(e){$("loginMsg").textContent=e.message;}};
+$("verifyOtp").onclick=async()=>{try{if(!confirmation)throw Error("আগে OTP পাঠান");await confirmation.confirm($("otp").value);}catch(e){$("loginMsg").textContent=e.message;}};
+
+onAuthStateChanged(auth,async user=>{
+ me=user;
+ if(!user){show("login");hide("main");return;}
+ hide("login");show("main");
+ const uref=doc(db,"users",user.uid),snap=await getDoc(uref);
+ if(!snap.exists())await setDoc(uref,{uid:user.uid,name:user.displayName||user.phoneNumber||"বন্ধু",photo:user.photoURL||"",bio:"",createdAt:serverTimestamp()});
+ listenUsers();listenStories();
+});
+function listenUsers(){
+ if(usersUnsub)usersUnsub();
+ usersUnsub=onSnapshot(collection(db,"users"),snap=>{
+  const users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.uid!==me.uid);
+  $("chatsPanel").innerHTML="";
+  users.forEach(u=>{
+   const el=document.createElement("div");el.className="item";
+   el.innerHTML=`<div class="avatar">${esc((u.name||"F")[0])}</div><div class="meta"><b>${esc(u.name||"বন্ধু")}</b><div class="sub">${esc(u.bio||"Friends Chat-এ যোগ দিয়েছেন")}</div></div>`;
+   if(u.photo)el.querySelector(".avatar").style.backgroundImage=`url("${u.photo}")`;
+   el.onclick=()=>openRoom(u.uid,u.name||"বন্ধু",u.photo||"");$("chatsPanel").append(el);
+  });
+ });
+}
+function listenStories(){
+ if(storiesUnsub)storiesUnsub();
+ storiesUnsub=onSnapshot(query(collection(db,"stories"),orderBy("createdAt","desc")),snap=>{
+  $("statusPanel").innerHTML=`<div class="item" id="addStatus"><div class="avatar statusring">＋</div><div><b>আমার স্ট্যাটাস</b><div class="sub">নতুন ছবি বা ভিডিও যোগ করুন</div></div></div>`;
+  $("addStatus").onclick=addStory;
+  snap.docs.forEach(d=>{const s=d.data();if(s.uid===me.uid)return;const el=document.createElement("div");el.className="item";el.innerHTML=`<div class="avatar statusring">${esc((s.name||"F")[0])}</div><div class="meta"><b>${esc(s.name||"বন্ধু")}</b><div class="sub">স্ট্যাটাস দেখুন</div></div>`;el.onclick=()=>window.open(s.url,"_blank");$("statusPanel").append(el);});
+ });
+}
+async function openRoom(uid,name,photo){
+ roomId=roomKey(me.uid,uid);$("roomTitle").textContent=name;avatar($("roomAv"),name,photo);show("room");
+ if(roomUnsub)roomUnsub();
+ roomUnsub=onSnapshot(query(collection(db,"rooms",roomId,"messages"),orderBy("createdAt")),snap=>{
+  $("messages").innerHTML="";
+  snap.forEach(d=>{const m=d.data(),el=document.createElement("div");el.className="msg"+(m.uid===me.uid?" mine":"");let body="";
+   if(m.type==="image")body=`<img src="${esc(m.url)}">`;else if(m.type==="video")body=`<video src="${esc(m.url)}" controls></video>`;else body=esc(m.text||"");
+   el.innerHTML=`<small>${m.uid===me.uid?"আপনি":esc(m.name||name)}</small>${body}`;$("messages").append(el);
+  });$("messages").scrollTop=$("messages").scrollHeight;
+ });
+}
+$("backRoom").onclick=()=>{hide("room");if(roomUnsub){roomUnsub();roomUnsub=null;}};
+async function sendText(){const text=$("messageText").value.trim();if(!text||!roomId)return;$("messageText").value="";await addDoc(collection(db,"rooms",roomId,"messages"),{uid:me.uid,name:me.displayName||"বন্ধু",text,type:"text",createdAt:serverTimestamp()});}
+$("sendMessage").onclick=sendText;$("messageText").addEventListener("keydown",e=>{if(e.key==="Enter")sendText();});
+$("mediaFile").onchange=async e=>{const f=e.target.files[0];if(!f||!roomId)return;try{const path=`chatMedia/${roomId}/${Date.now()}_${f.name}`,r=ref(storage,path);await uploadBytes(r,f);const url=await getDownloadURL(r);await addDoc(collection(db,"rooms",roomId,"messages"),{uid:me.uid,name:me.displayName||"বন্ধু",url,type:f.type.startsWith("video/")?"video":"image",createdAt:serverTimestamp()});}catch(err){alert("ফাইল পাঠানো যায়নি: "+err.message);}e.target.value="";};
+async function addStory(){const f=document.createElement("input");f.type="file";f.accept="image/*,video/*";f.onchange=async()=>{const file=f.files[0];if(!file)return;try{const r=ref(storage,`stories/${me.uid}/${Date.now()}_${file.name}`);await uploadBytes(r,file);const url=await getDownloadURL(r);await addDoc(collection(db,"stories"),{uid:me.uid,name:me.displayName||"বন্ধু",url,type:file.type,createdAt:serverTimestamp()});alert("স্ট্যাটাস যোগ হয়েছে");}catch(e){alert(e.message);}};f.click();}
+$("newChat").onclick=()=>{if(activeTab==="status")addStory();else if(activeTab==="calls")alert("প্রথমে কোনো বন্ধুর চ্যাট খুলে কল করুন");else alert("চ্যাট শুরু করতে তালিকা থেকে বন্ধুর নাম চাপুন");};
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{activeTab=t.dataset.tab;document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===t));["chats","status","calls","groups"].forEach(k=>$(k+"Panel").classList.toggle("hide",k!==activeTab));$("newChat").textContent=activeTab==="status"?"＋":"＋";});
+$("myProfile").onclick=async()=>{const s=await getDoc(doc(db,"users",me.uid)),u=s.data()||{};$("profileName").value=u.name||"";$("profileBio").value=u.bio||"";avatar($("profileAvatar"),u.name,u.photo);newPhoto=null;show("profile");};
+$("closeProfile").onclick=()=>hide("profile");
+$("profilePhoto").onchange=e=>{const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{newPhoto=reader.result;avatar($("profileAvatar"),$("profileName").value,newPhoto);};reader.readAsDataURL(f);};
+$("saveProfile").onclick=async()=>{const data={name:$("profileName").value.trim()||"বন্ধু",bio:$("profileBio").value.trim()};if(newPhoto){const r=ref(storage,`avatars/${me.uid}/${Date.now()}.jpg`);const blob=await (await fetch(newPhoto)).blob();await uploadBytes(r,blob);data.photo=await getDownloadURL(r);}await setDoc(doc(db,"users",me.uid),data,{merge:true});$("profileMsg").textContent="সেভ হয়েছে";};
+$("settingsBtn").onclick=()=>show("settings");$("closeSettings").onclick=()=>hide("settings");
+$("signOut").onclick=()=>signOut(auth);$("privacyInfo").onclick=()=>alert("আপনার Firebase Security Rules ঠিকভাবে সেট করুন।");
+$("themeToggle").onclick=()=>{document.body.classList.toggle("light");$("app").style.filter=document.body.classList.contains("light")?"brightness(1.04)":"none";};
+
+// WebRTC one-to-one calls. Works only on supported secure browser contexts.
+async function startCall(video=true){
+ if(!roomId){alert("আগে বন্ধুর চ্যাট খুলুন");return;}
+ try{
+  localStream=await navigator.mediaDevices.getUserMedia({audio:true,video});
+  $("localVideo").srcObject=localStream;show("callScreen");
+  pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
+  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+  pc.ontrack=e=>{$("remoteVideo").srcObject=e.streams[0];};
+  const callId=roomId+"_"+Date.now();callDocRef=doc(db,"calls",callId);
+  const offerCands=collection(callDocRef,"offerCandidates"),answerCands=collection(callDocRef,"answerCandidates");
+  pc.onicecandidate=e=>{if(e.candidate)addDoc(offerCands,e.candidate.toJSON());};
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+  await setDoc(callDocRef,{from:me.uid,to:roomId.split("_").find(x=>x!==me.uid),offer:{type:offer.type,sdp:offer.sdp},status:"calling",createdAt:serverTimestamp()});
+  callUnsubs.push(onSnapshot(answerCands,s=>s.docChanges().forEach(c=>{if(c.type==="added")pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(()=>{});})));
+  callUnsubs.push(onSnapshot(callDocRef,s=>{const d=s.data();if(d?.answer&&!pc.currentRemoteDescription)pc.setRemoteDescription(new RTCSessionDescription(d.answer));if(d?.status==="ended")endCall(false);}));
+  $("callStatus").textContent=video?"ভিডিও কল চলছে":"অডিও কল চলছে";
+ }catch(e){alert("কল চালু করা যায়নি: "+e.message);await endCall(false);}
+}
+async function endCall(notify=true){if(notify&&callDocRef)try{await updateDoc(callDocRef,{status:"ended"});}catch(e){}callUnsubs.forEach(u=>u());callUnsubs=[];if(pc){pc.close();pc=null;}if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}hide("callScreen");callDocRef=null;}
+$("voiceCall").onclick=()=>startCall(false);$("videoCall").onclick=()=>startCall(true);$("endCall").onclick=()=>endCall(true);
+$("muteBtn").onclick=()=>{const t=localStream?.getAudioTracks()[0];if(t)t.enabled=!t.enabled;};
+$("camBtn").onclick=()=>{const t=localStream?.getVideoTracks()[0];if(t)t.enabled=!t.enabled;};
+window.addEventListener("beforeunload",()=>{if(roomUnsub)roomUnsub();if(usersUnsub)usersUnsub();if(storiesUnsub)storiesUnsub();});
+</script>
+</body>
+</html>
