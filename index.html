@@ -146,6 +146,7 @@ header button,.ibtn{color:#111!important}
 #msgs.wBlocked .msg:not(.me){display:none!important}
 .wgrp .nm::after{display:none!important}
 .rup{cursor:pointer}
+#chatsList .item:first-child:not(.wgrp) .nm::after{display:inline-block}
 </style>
 </head>
 <body>
@@ -385,7 +386,7 @@ function loadChats() {
     g.appendChild(avatar("গ", ""));
     g.insertAdjacentHTML("beforeend", '<div><div class="nm">বন্ধুদের গ্রুপ</div><div class="sub">সবাই এখানে</div></div>');
     g.onclick = () => openRoom("group", "বন্ধুদের গ্রুপ", null);
-    box.appendChild(g);
+
     snap.forEach((d) => {
       const u = d.data();
       if (u.uid === me.uid) return;
@@ -1423,7 +1424,7 @@ $("back").addEventListener("click", () => clearInterval(statusTimer));
       const sb = document.createElement("div"); sb.className = "sub"; sb.textContent = "গ্রুপ";
       w.append(nm, sb); it.appendChild(w);
       it.onclick = () => openRoom(g.id, g.name, null);
-      if (first) first.after(it); else box.appendChild(it);
+      box.insertBefore(it, box.querySelector(".item:not(.wgrp)"));
     });
   }
   new MutationObserver(() => {
@@ -1520,6 +1521,68 @@ $("back").addEventListener("click", () => clearInterval(statusTimer));
     if (!am || isNaN(am)) return;
     location.href = "upi://pay?pa=" + encodeURIComponent(upi.trim()) + "&pn=" + encodeURIComponent(($id("roomName").textContent || "").trim()) + "&am=" + encodeURIComponent(am) + "&cu=INR";
   });
+})();
+  // ===== নিজের ছবি ব্যাকগ্রাউন্ড =====
+(function () {
+  const msgsEl = document.getElementById("msgs");
+  const roomEl2 = document.getElementById("room");
+  const pick = document.createElement("input");
+  pick.type = "file"; pick.accept = "image/*"; pick.style.display = "none";
+  document.body.appendChild(pick);
+  const key = () => "wall_" + (currentRoom || "none");
+
+  let last = null;
+  function apply() {
+    let d = "";
+    try { d = localStorage.getItem(key()) || ""; } catch (e) {}
+    const sig = key() + ":" + d.length;
+    if (sig === last) return;
+    last = sig;
+    msgsEl.style.backgroundImage = d ? 'url("' + d + '")' : "";
+    msgsEl.style.backgroundSize = "cover";
+    msgsEl.style.backgroundPosition = "center";
+    msgsEl.style.backgroundRepeat = "no-repeat";
+  }
+  setInterval(apply, 700);
+
+  pick.onchange = () => {
+    const f = pick.files[0];
+    if (!f) return;
+    const img = new Image();
+    const url = URL.createObjectURL(f);
+    img.onload = () => {
+      const s = Math.min(1, 900 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * s);
+      c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      try { localStorage.setItem(key(), c.toDataURL("image/jpeg", 0.75)); }
+      catch (e) { alert("ছবি সেভ হয়নি, ফোনে জায়গা কম"); }
+      URL.revokeObjectURL(url);
+      apply();
+    };
+    img.src = url;
+    pick.value = "";
+  };
+
+  // Chat theme প্যানেল খুললে দুটো নতুন বাটন যোগ হবে
+  new MutationObserver(() => {
+    const p = document.getElementById("wPanel");
+    if (!p || p.dataset.ph) return;
+    if (!/Chat theme/.test(p.children[0].textContent)) return;
+    const grid = p.children[1] && p.children[1].firstElementChild;
+    if (!grid) return;
+    p.dataset.ph = "1";
+    const mk = (label, fn) => {
+      const s = document.createElement("div");
+      s.textContent = label;
+      s.style.cssText = "height:90px;border-radius:12px;border:2px dashed #1fa855;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px;font-size:14px;cursor:pointer;background:#f6fff8";
+      s.onclick = () => { p.remove(); fn(); };
+      grid.appendChild(s);
+    };
+    mk("📷 My photo", () => pick.click());
+    mk("✖ Remove photo", () => { try { localStorage.removeItem(key()); } catch (e) {} apply(); });
+  }).observe(roomEl2, { childList: true });
 })();
   </script>
 </body>
