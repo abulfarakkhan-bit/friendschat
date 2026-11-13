@@ -2,147 +2,1525 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#075e54">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Friends Chat</title>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#075e54">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js");
+  });
+}
+</script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#111b21;color:#e9edef;font-family:Arial,sans-serif}button,input,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;background:#00a884;color:#062e27;font-weight:700}.hide{display:none!important}#app{max-width:520px;margin:auto;height:100dvh;background:#efeae2;color:#111;display:flex;flex-direction:column;position:relative;overflow:hidden}header{background:#075e54;color:white;padding:14px;display:flex;align-items:center;gap:12px;min-height:58px}header strong{font-size:19px;flex:1}header button{background:transparent;color:white;padding:7px;font-size:20px}#login{margin:auto;width:90%;max-width:360px;background:white;color:#111;padding:22px;border-radius:14px;text-align:center}#login input{width:100%;padding:12px;margin:7px 0;border:1px solid #bbb;border-radius:8px}.tabs{display:flex;background:#075e54;color:#cde4df}.tab{flex:1;text-align:center;padding:13px 4px;cursor:pointer}.tab.active{color:white;border-bottom:3px solid white}.panel{flex:1;overflow:auto;background:#fff}.item{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #eee;cursor:pointer}.avatar{width:46px;height:46px;border-radius:50%;background:#d9eee8;color:#075e54;display:grid;place-items:center;font-weight:bold;flex:none;background-size:cover;background-position:center}.meta{flex:1;min-width:0}.sub{font-size:13px;color:#667781;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fab{position:absolute;right:18px;bottom:22px;border-radius:50%;width:54px;height:54px;font-size:23px;box-shadow:0 2px 8px #777}.room{position:absolute;inset:0;background:#efeae2;display:flex;flex-direction:column;z-index:4}.roomhead{background:#075e54;color:white;padding:9px;display:flex;align-items:center;gap:10px}.roomhead button{background:transparent;color:white}.messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:7px;background:linear-gradient(#e9e4dc,#e9e4dc)}.msg{max-width:82%;padding:8px 10px;border-radius:9px;background:white;align-self:flex-start;overflow-wrap:anywhere;box-shadow:0 1px 1px #bbb}.msg.mine{align-self:flex-end;background:#d9fdd3}.msg small{display:block;color:#667781;font-size:10px;margin-bottom:3px}.msg img,.msg video{max-width:100%;border-radius:7px}.composer{display:flex;gap:6px;padding:8px;background:#f0f2f5}.composer input{flex:1;min-width:0;border:0;border-radius:22px;padding:12px}.overlay{position:absolute;inset:0;background:#fff;color:#111;z-index:7;display:flex;flex-direction:column}.overlay main{padding:16px;overflow:auto}.overlay input,.overlay textarea{width:100%;padding:12px;margin:7px 0;border:1px solid #bbb;border-radius:8px}.statusring{border:3px solid #25d366}.muted{color:#667781;font-size:13px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+  body{background:#111;height:100dvh;display:flex;justify-content:center;overflow:hidden}
+#app{width:100%;max-width:520px;height:100dvh;background:#efeae2;display:flex;flex-direction:column;position:relative}
+.hide{display:none!important}
+header{background:#075e54;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px}
+header .title{flex:1;font-size:18px;font-weight:bold}
+header button,.ibtn{background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px}
+#login{flex:1;background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:20px}
+#login h1{color:#075e54}
+.lbtn{width:100%;max-width:300px;padding:13px;border:none;border-radius:8px;color:#fff;font-size:16px;cursor:pointer}
+.g{background:#db4437}.f{background:#1877f2}.p{background:#25d366}
+#phoneBox{display:none;flex-direction:column;gap:8px;width:100%;max-width:300px}
+#phoneBox input{padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px}
+#main{flex:1;display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;background:#075e54}
+.tab{flex:1;text-align:center;padding:12px;color:#b8d8d3;cursor:pointer;font-weight:bold;border-bottom:3px solid transparent}
+.tab.on{color:#fff;border-bottom-color:#fff}
+.list{flex:1;overflow-y:auto;background:#fff}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #eee;cursor:pointer}
+.av{width:46px;height:46px;border-radius:50%;background:#bbb center/cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold}
+.item .nm{font-weight:bold}.item .sub{font-size:13px;color:#777}
+.storyring{border:3px solid #25d366}
+#room{position:absolute;inset:0;background:#efeae2;display:flex;flex-direction:column;z-index:5}
+#msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px}
+.msg{max-width:78%;padding:7px 9px;border-radius:8px;background:#fff;align-self:flex-start;word-wrap:break-word}
+.msg.me{background:#dcf8c6;align-self:flex-end}
+.msg .n{font-size:12px;color:#075e54;font-weight:bold}
+.msg .t{font-size:10px;color:#888;text-align:right;margin-top:2px}
+.msg img,.msg video{max-width:100%;border-radius:6px;display:block}
+.bar{display:flex;gap:6px;padding:8px;background:#f0f0f0;align-items:center}
+.bar input[type=text]{flex:1;padding:11px;border:none;border-radius:20px;font-size:16px}
+.bar button{background:#075e54;color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:18px;cursor:pointer}
+.bar label{font-size:24px;cursor:pointer;padding:0 4px}
+#call{position:absolute;inset:0;background:#000;z-index:10;display:flex;flex-direction:column}
+#remoteWrap{flex:1;position:relative;background:#222}
+#remoteVideo{width:100%;height:100%;object-fit:cover}
+#localVideo{position:absolute;right:10px;top:10px;width:110px;border-radius:8px;border:2px solid #fff;background:#444}
+#callInfo{position:absolute;top:12px;left:12px;color:#fff;font-size:18px}
+.cbar{display:flex;justify-content:center;gap:16px;padding:16px;background:#111}
+.cbar button{width:54px;height:54px;border-radius:50%;border:none;font-size:22px;cursor:pointer;background:#444;color:#fff}
+.cbar .end{background:#e53935}
+#incoming{position:absolute;inset:0;background:rgba(0,0,0,.85);z-index:20;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;color:#fff;font-size:22px}
+#incoming .row{display:flex;gap:30px}
+#incoming button{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;cursor:pointer}
+#viewer{position:absolute;inset:0;background:#000;z-index:15;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff}
+#viewer img,#viewer video{max-width:100%;max-height:80%}
+.fab{position:absolute;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;background:#25d366;color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+#room{height:100dvh}
+ #inviteBtn{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;background:#fff}
+#inviteBtn .ic{width:46px;height:46px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+#inviteBtn .invT{font-weight:bold;font-size:17px}
+#inviteBtn .invS{font-size:14px;color:#667781} 
+  #form{padding-bottom:60px!important}
+  #form{padding-bottom:8px!important}
+.bar{position:relative}
+#bottomNav{padding-bottom:60px!important}
+  .item .nm::after,.msg .n::after,#roomName.vb::after{content:"✔";display:inline-block;width:15px;height:15px;line-height:15px;font-size:10px;text-align:center;color:#fff;background:#1d9bf0;border-radius:50%;margin-left:5px;vertical-align:middle}
+#chatsList .item:first-child .nm::after{display:none}
+#profile{position:absolute;inset:0;height:100dvh;background:#fff;z-index:8;display:flex;flex-direction:column}
+#profile .body{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;align-items:center;gap:14px}
+#pAv{width:130px;height:130px;border-radius:50%;background:#075e54 center/cover;color:#fff;font-size:52px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#profile input,#profile textarea{width:100%;max-width:360px;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px}
+#profile label.l{align-self:flex-start;max-width:360px;width:100%;color:#075e54;font-size:13px;font-weight:bold;margin:0 auto}
+#saveProfile{width:100%;max-width:360px;padding:13px;background:#25d366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+/* ===== WhatsApp look ===== */
+header{background:#fff!important;color:#111!important;padding:14px 16px!important}
+header .title{color:#128c7e!important;font-size:24px!important;font-weight:bold}
+header button,.ibtn{color:#111!important}
+#room header{background:#075e54!important;color:#fff!important}
+#room header .title{color:#fff!important;font-size:18px!important}
+#room header button{color:#fff!important}
+#searchWrap{padding:6px 14px 10px;background:#fff}
+#searchBox{width:100%;padding:11px 16px;border:none;border-radius:24px;background:#f0f2f5;font-size:16px}
+.tabs{display:none!important}
+.list{background:#fff}
+.item{padding:10px 16px!important;border-bottom:none!important}
+.item .nm{font-size:17px}
+.item .sub{font-size:14px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
+.item .meta{margin-left:auto;font-size:12px;color:#667781;align-self:flex-start;padding-top:4px}
+#bottomNav{display:flex;background:#fff;border-top:1px solid #e5e5e5;padding:6px 0 10px}
+#bottomNav div{flex:1;text-align:center;font-size:12px;color:#54656f;cursor:pointer}
+#bottomNav div span{display:block;font-size:22px;margin:0 auto 2px;width:60px;border-radius:16px;padding:3px 0}
+#bottomNav div.on{color:#111;font-weight:bold}
+#bottomNav div.on span{background:#d9fdd3}
+.fab{display:flex;align-items:center;justify-content:center;bottom:84px!important;border-radius:16px!important;background:#25d366!important}
+.soon{padding:40px 20px;text-align:center;color:#667781;font-size:16px}
+#statusRow{display:flex;gap:14px;padding:10px 16px;overflow-x:auto;background:#fff;border-bottom:1px solid #f0f0f0}
+.stc{text-align:center;font-size:12px;color:#444;flex-shrink:0;cursor:pointer}
+.stc .av{margin:0 auto 4px}
+#delBar{position:absolute;left:0;right:0;bottom:0;background:#fff;z-index:30;padding:14px;display:flex;gap:10px;box-shadow:0 -2px 8px rgba(0,0,0,.2)}
+#delBar button{flex:1;padding:13px;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+.tick{font-size:12px;color:#8696a0;margin-left:4px}
+.tick.read{color:#34b7f1}
+.dot{width:12px;height:12px;border-radius:50%;background:#25d366;border:2px solid #fff;position:absolute;right:0;bottom:0}
+.avw{position:relative;flex-shrink:0}
+#typing{padding:2px 14px;font-size:13px;color:#667781;background:#efeae2;min-height:20px}
+.reply{background:rgba(0,0,0,.06);border-left:4px solid #25d366;border-radius:6px;padding:4px 8px;margin-bottom:4px;font-size:13px;color:#555}
+.react{position:absolute;bottom:-12px;right:6px;background:#fff;border-radius:12px;padding:1px 6px;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.msg{position:relative}
+#replyBar{display:none;background:#f0f0f0;padding:6px 12px;border-left:4px solid #25d366;font-size:13px;justify-content:space-between}
+#emojiBar{position:absolute;left:10px;right:10px;bottom:70px;background:#fff;border-radius:30px;padding:10px;display:flex;justify-content:space-around;font-size:26px;z-index:30;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+#actBar{position:absolute;left:0;right:0;bottom:0;background:#fff;z-index:31;padding:10px;display:flex;gap:8px;box-shadow:0 -2px 8px rgba(0,0,0,.2)}
+#actBar button{flex:1;padding:12px;border:none;border-radius:8px;font-size:15px;background:#f0f0f0}
+.voice audio{height:36px;max-width:220px}
+#micBtn.rec{background:#e53935!important}
+.bar{background:transparent!important}
+.bar .pill{flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:30px;padding:4px 14px}
+.bar .pill input[type=text]{flex:1;background:transparent;padding:10px 4px}
+.bar .pill .pic{padding:0;display:flex}
+.bar button{width:48px;height:48px;background:#1fa855}
+#header button svg{display:block}
+#room header{align-items:center}
+.bar #sendBtn.hide{display:none!important}
+/* ===== WhatsApp চ্যাট লুক ===== */
+#room header{background:#fff!important;color:#111!important;padding:8px 8px!important;gap:4px;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+#room header .title{color:#111!important;font-size:19px!important}
+#room header button{color:#111!important;font-size:26px!important}
+#room header svg{fill:#111;display:block}
+#roomStatus{color:#667781;font-size:12px!important}
+
+#form{background:transparent!important;padding:6px 8px 8px!important;gap:8px;align-items:center}
+.bar .pill{flex:1;min-width:0;display:flex;align-items:center;gap:14px;background:#fff;border-radius:30px;padding:0 16px;height:50px;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.bar .pill input[type=text]{flex:1;min-width:0;background:transparent;border:none;outline:none;padding:0;font-size:17px}
+.bar .pill .pi{display:flex;width:24px;height:24px;padding:0;flex-shrink:0;cursor:pointer}
+.rup{width:22px;height:22px;border:2px solid #5f6b73;border-radius:50%;color:#5f6b73;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bar #micBtn,.bar #sendBtn{width:50px;height:50px;border-radius:50%;background:#1fa855!important;border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.3);flex-shrink:0}
+.bar #micBtn.hide,.bar #sendBtn.hide{display:none!important}
+.wGone{display:none!important}
+#msgs.wBlocked .msg:not(.me){display:none!important}
+.wgrp .nm::after{display:none!important}
+.rup{cursor:pointer}
 </style>
 </head>
 <body>
 <div id="app">
-  <section id="login">
-    <h2>Friends Chat</h2><p class="muted">বন্ধুদের সঙ্গে চ্যাট করুন</p>
-    <button id="googleBtn" style="width:100%;margin:5px 0">Google দিয়ে লগইন</button>
-    <button id="facebookBtn" style="width:100%;margin:5px 0;background:#1877f2;color:white">Facebook দিয়ে লগইন</button>
-    <input id="phone" placeholder="+91 ফোন নম্বর">
+<!-- লগইন -->
+<div id="login">
+  <h1>Friends Chat</h1>
+  <button class="lbtn g" id="gBtn">Google দিয়ে ঢোকো</button>
+  <button class="lbtn f" id="fBtn">Facebook দিয়ে ঢোকো</button>
+  <button class="lbtn p" id="pBtn">মোবাইল নম্বর দিয়ে ঢোকো</button>
+  <div id="phoneBox">
+    <input id="phoneNum" placeholder="+8801XXXXXXXXX" type="tel">
+    <button class="lbtn p" id="sendOtp">কোড পাঠাও</button>
+    <input id="otpCode" placeholder="৬ সংখ্যার কোড" class="hide">
+    <button class="lbtn p hide" id="verifyOtp">যাচাই করো</button>
     <div id="recaptcha"></div>
-    <button id="sendOtp" style="width:100%">OTP পাঠান</button>
-    <input id="otp" placeholder="OTP লিখুন">
-    <button id="verifyOtp" style="width:100%">OTP যাচাই</button>
-    <p id="loginMsg" class="muted"></p>
-  </section>
-  <section id="main" class="hide" style="display:flex;flex-direction:column;flex:1;min-height:0">
-    <header><strong>Friends Chat</strong><button id="searchBtn" aria-label="Search">⌕</button><button id="myProfile" aria-label="Profile">●</button><button id="settingsBtn" aria-label="Settings">⋮</button></header>
-    <nav class="tabs"><div class="tab active" data-tab="chats">চ্যাট</div><div class="tab" data-tab="status">স্ট্যাটাস</div><div class="tab" data-tab="calls">কল</div><div class="tab" data-tab="groups">গ্রুপ</div></nav>
-    <div id="chatsPanel" class="panel"></div><div id="statusPanel" class="panel hide"></div><div id="callsPanel" class="panel hide"></div><div id="groupsPanel" class="panel hide"></div>
-    <button id="newChat" class="fab">＋</button>
-  </section>
-  <section id="room" class="room hide">
-    <div class="roomhead"><button id="backRoom">‹</button><div class="avatar" id="roomAv">F</div><div style="flex:1"><b id="roomTitle">Chat</b><div id="roomSub" style="font-size:12px">Friends Chat</div></div><button id="voiceCall">☎</button><button id="videoCall">▣</button><button id="roomMenu">⋮</button></div>
-    <div id="messages" class="messages"></div>
-    <div class="composer"><label style="padding:10px;cursor:pointer">＋<input id="mediaFile" type="file" accept="image/*,video/*" hidden></label><input id="messageText" placeholder="মেসেজ লিখুন"><button id="sendMessage">➤</button></div>
-  </section>
-  <section id="profile" class="overlay hide"><header><button id="closeProfile">‹</button><strong>প্রোফাইল</strong></header><main><div class="avatar" id="profileAvatar" style="width:90px;height:90px;margin:10px auto;font-size:28px">F</div><input id="profilePhoto" type="file" accept="image/*"><label>নাম</label><input id="profileName"><label>Bio</label><textarea id="profileBio" rows="3"></textarea><button id="saveProfile" style="width:100%">সেভ করুন</button><p id="profileMsg" class="muted"></p></main></section>
-  <section id="settings" class="overlay hide"><header><button id="closeSettings">‹</button><strong>Settings</strong></header><main><div class="item" id="themeToggle">🌙 ডার্ক/লাইট থিম বদলান</div><div class="item" id="privacyInfo">🔒 Privacy ও নিরাপত্তা</div><div class="item" id="signOut">লগআউট</div><p class="muted">Friends Chat — ব্যক্তিগত প্রজেক্ট, WhatsApp-এর অফিসিয়াল অ্যাপ নয়।</p></main></section>
-  <section id="callScreen" class="overlay hide"><header><button id="endCall">কল শেষ</button><strong id="callLabel">কল চলছে</strong></header><main style="background:#17252d;color:white;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center"><video id="remoteVideo" autoplay playsinline style="width:100%;max-height:55%;background:#222"></video><video id="localVideo" autoplay muted playsinline style="width:110px;position:absolute;right:15px;top:75px;background:#333"></video><p id="callStatus">সংযোগ হচ্ছে…</p><div style="display:flex;gap:10px"><button id="muteBtn">মাইক</button><button id="camBtn">ক্যামেরা</button></div></main></section>
+  </div>
+  <p id="loginErr" style="color:red;font-size:14px;text-align:center"></p>
 </div>
-<script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {getAuth,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup,signInWithPhoneNumber,RecaptchaVerifier,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {getFirestore,doc,setDoc,getDoc,collection,addDoc,onSnapshot,query,orderBy,serverTimestamp,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-const firebaseConfig = {
- apiKey:"AIzaSyD40E1QifHt5xQU935KOtfzi1wORCgvJrk",
- authDomain:"friendschat-8a7fc.firebaseapp.com",
- projectId:"friendschat-8a7fc",
- storageBucket:"friendschat-8a7fc.firebasestorage.app",
- messagingSenderId:"14697970142",
- appId:"1:14697970142:web:137bb152271d8bd7fc454f",
- measurementId:"G-4YHFYRRCJG"
-};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
-const $=id=>document.getElementById(id);
-let me=null,roomId=null,roomUnsub=null,usersUnsub=null,storiesUnsub=null,callUnsubs=[],pc=null,localStream=null,callDocRef=null,confirmation=null,recaptcha=null,activeTab="chats",newPhoto=null;
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function show(id){$(id).classList.remove("hide")}function hide(id){$(id).classList.add("hide")}
-function avatar(el,name,photo){el.style.backgroundImage=photo?`url("${photo}")`:"none";el.textContent=photo?"":(name||"?").slice(0,1).toUpperCase()}
-function roomKey(a,b){return [a,b].sort().join("_")}
-$("googleBtn").onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>$("loginMsg").textContent=e.message);
-$("facebookBtn").onclick=()=>signInWithPopup(auth,new FacebookAuthProvider()).catch(e=>$("loginMsg").textContent=e.message);
-$("sendOtp").onclick=async()=>{try{if(!recaptcha)recaptcha=new RecaptchaVerifier(auth,"recaptcha",{});confirmation=await signInWithPhoneNumber(auth,$("phone").value,recaptcha);$("loginMsg").textContent="OTP পাঠানো হয়েছে";}catch(e){$("loginMsg").textContent=e.message;}};
-$("verifyOtp").onclick=async()=>{try{if(!confirmation)throw Error("আগে OTP পাঠান");await confirmation.confirm($("otp").value);}catch(e){$("loginMsg").textContent=e.message;}};
+<!-- মেইন স্ক্রিন -->
+<div id="main" class="hide">
+  <header>
+    <span class="title">Friends Chat</span>
+    <button id="myProfile" title="প্রোফাইল">👤</button>
+    <button id="logout" title="Logout">⎋</button>
+  </header>
+  <div id="searchWrap"><input id="searchBox" placeholder="সার্চ করো..."></div>
+  <div id="statusRow"></div>
+  <div class="list" id="chatsList"></div>
+  <div class="list hide" id="storiesList"></div>
+  <div class="list hide" id="soonList"><div class="soon" id="soonText"></div></div>
+  <button class="fab hide" id="addStory">＋</button>
+  <input type="file" id="storyFile" accept="image/*,video/*" class="hide">
+  <div id="bottomNav">
+    <div data-n="chats" class="on"><span>💬</span>চ্যাট</div>
+    <div data-n="updates"><span>◎</span>আপডেটস</div>
+    <div data-n="comm"><span>👥</span>কমিউনিটি</div>
+    <div data-n="calls"><span>📞</span>কল</div>
+  </div>
+</div>
 
-onAuthStateChanged(auth,async user=>{
- me=user;
- if(!user){show("login");hide("main");return;}
- hide("login");show("main");
- const uref=doc(db,"users",user.uid),snap=await getDoc(uref);
- if(!snap.exists())await setDoc(uref,{uid:user.uid,name:user.displayName||user.phoneNumber||"বন্ধু",photo:user.photoURL||"",bio:"",createdAt:serverTimestamp()});
- listenUsers();listenStories();
+<!-- চ্যাট রুম -->
+<div id="room" class="hide">
+  <header>
+    <button id="back">←</button>
+<div class="title" id="roomHeader" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+  <img id="roomPhoto" src="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;display:none;">
+  <div>
+    <div id="roomName"></div>
+    <small id="roomStatus" style="font-size:11px;font-weight:normal;">প্রোফাইল</small>
+  </div>
+</div>
+<button id="vcall" title="ভিডিও কল"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11z"/></svg></button>
+<button id="acall" title="অডিও কল"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C9.6 21 3 14.4 3 6a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></button>
+<button id="menuBtn" title="মেনু"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+  </header>
+  <div id="msgs"></div>
+  <div id="typing"></div>
+<div id="replyBar"><span id="replyText"></span><button type="button" id="replyX" style="border:none;background:none;font-size:18px">✖</button></div>
+  
+    <form class="bar" id="form">
+  <div class="pill">
+    <svg class="pi" viewBox="0 0 24 24" fill="none" stroke="#5f6b73" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#5f6b73"/><circle cx="15" cy="10" r="1" fill="#5f6b73"/><path d="M8 14.5c1 1.5 2.3 2.2 4 2.2s3-.7 4-2.2"/></svg>
+    <input type="text" id="txt" placeholder="Message" autocomplete="off">
+    <label for="mediaFile" class="pi"><svg width="24" height="24" viewBox="0 0 24 24" fill="#5f6b73"><path d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6z"/></svg></label>
+    <span class="rup">₹</span>
+    <label for="mediaFile" class="pi"><svg width="24" height="24" viewBox="0 0 24 24" fill="#5f6b73"><path d="M9 2 7.2 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.2L15 2zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg></label>
+    <input type="file" id="mediaFile" accept="image/*,video/*" class="hide">
+  </div>
+  <button type="button" id="micBtn"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7z"/></svg></button>
+  <button type="submit" id="sendBtn" class="hide"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
+    </form>
+</div>
+
+<!-- কল স্ক্রিন -->
+<div id="call" class="hide">
+  <div id="remoteWrap">
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo" autoplay playsinline muted></video>
+    <div id="callInfo"></div>
+  </div>
+  <div class="cbar">
+    <button id="muteBtn">🎤</button>
+    <button id="camBtn">📷</button>
+    <button id="shareBtn">🖥️</button>
+    <button class="end" id="endBtn">✖</button>
+  </div>
+</div>
+
+<!-- ইনকামিং কল -->
+<div id="incoming" class="hide">
+  <div id="incName"></div>
+  <div class="row">
+    <button style="background:#25d366" id="accept">📞</button>
+    <button style="background:#e53935" id="reject">✖</button>
+  </div>
+</div>
+<!-- প্রোফাইল -->
+<div id="profile" class="hide">
+  <header>
+    <button id="pBack">←</button>
+    <div class="title">প্রোফাইল</div>
+  </header>
+  <div class="body">
+    <div id="pAv" title="ছবি বদলাও"></div>
+    <input type="file" id="pFile" accept="image/*" class="hide">
+    <label class="l">নাম</label>
+    <input id="pName" maxlength="40">
+    <label class="l">বায়ো</label>
+    <textarea id="pBio" rows="3" maxlength="120" placeholder="নিজের সম্পর্কে কিছু লেখো"></textarea>
+    <button id="saveProfile">সেভ করো</button>
+    <p id="pMsg" style="color:#075e54"></p>
+  </div>
+</div>
+<!-- স্টোরি দেখা -->
+<div id="viewer" class="hide">
+  <div id="viewerName" style="position:absolute;top:14px;left:14px"></div>
+  <button class="ibtn" id="closeViewer" style="position:absolute;top:10px;right:10px">✖</button>
+  <div id="viewerBody"></div>
+</div>
+
+</div>
+<script>
+window.addEventListener("error", function (e) {
+  alert("এরর: " + e.message + " | লাইন " + e.lineno);
 });
-function listenUsers(){
- if(usersUnsub)usersUnsub();
- usersUnsub=onSnapshot(collection(db,"users"),snap=>{
-  const users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.uid!==me.uid);
-  $("chatsPanel").innerHTML="";
-  users.forEach(u=>{
-   const el=document.createElement("div");el.className="item";
-   el.innerHTML=`<div class="avatar">${esc((u.name||"F")[0])}</div><div class="meta"><b>${esc(u.name||"বন্ধু")}</b><div class="sub">${esc(u.bio||"Friends Chat-এ যোগ দিয়েছেন")}</div></div>`;
-   if(u.photo)el.querySelector(".avatar").style.backgroundImage=`url("${u.photo}")`;
-   el.onclick=()=>openRoom(u.uid,u.name||"বন্ধু",u.photo||"");$("chatsPanel").append(el);
-  });
- });
+window.addEventListener("unhandledrejection", function (e) {
+  alert("এরর: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
+});
+// ===== মাইক ↔ সেন্ড বাটন =====
+const txtEl = document.getElementById("txt");
+const sendEl = document.getElementById("sendBtn");
+const micEl = document.getElementById("micBtn");
+function syncBtns() {
+  const has = txtEl.value.trim().length > 0;
+  sendEl.classList.toggle("hide", !has);
+  micEl.classList.toggle("hide", has);
 }
-function listenStories(){
- if(storiesUnsub)storiesUnsub();
- storiesUnsub=onSnapshot(query(collection(db,"stories"),orderBy("createdAt","desc")),snap=>{
-  $("statusPanel").innerHTML=`<div class="item" id="addStatus"><div class="avatar statusring">＋</div><div><b>আমার স্ট্যাটাস</b><div class="sub">নতুন ছবি বা ভিডিও যোগ করুন</div></div></div>`;
-  $("addStatus").onclick=addStory;
-  snap.docs.forEach(d=>{const s=d.data();if(s.uid===me.uid)return;const el=document.createElement("div");el.className="item";el.innerHTML=`<div class="avatar statusring">${esc((s.name||"F")[0])}</div><div class="meta"><b>${esc(s.name||"বন্ধু")}</b><div class="sub">স্ট্যাটাস দেখুন</div></div>`;el.onclick=()=>window.open(s.url,"_blank");$("statusPanel").append(el);});
- });
-}
-async function openRoom(uid,name,photo){
- roomId=roomKey(me.uid,uid);$("roomTitle").textContent=name;avatar($("roomAv"),name,photo);show("room");
- if(roomUnsub)roomUnsub();
- roomUnsub=onSnapshot(query(collection(db,"rooms",roomId,"messages"),orderBy("createdAt")),snap=>{
-  $("messages").innerHTML="";
-  snap.forEach(d=>{const m=d.data(),el=document.createElement("div");el.className="msg"+(m.uid===me.uid?" mine":"");let body="";
-   if(m.type==="image")body=`<img src="${esc(m.url)}">`;else if(m.type==="video")body=`<video src="${esc(m.url)}" controls></video>`;else body=esc(m.text||"");
-   el.innerHTML=`<small>${m.uid===me.uid?"আপনি":esc(m.name||name)}</small>${body}`;$("messages").append(el);
-  });$("messages").scrollTop=$("messages").scrollHeight;
- });
-}
-$("backRoom").onclick=()=>{hide("room");if(roomUnsub){roomUnsub();roomUnsub=null;}};
-async function sendText(){const text=$("messageText").value.trim();if(!text||!roomId)return;$("messageText").value="";await addDoc(collection(db,"rooms",roomId,"messages"),{uid:me.uid,name:me.displayName||"বন্ধু",text,type:"text",createdAt:serverTimestamp()});}
-$("sendMessage").onclick=sendText;$("messageText").addEventListener("keydown",e=>{if(e.key==="Enter")sendText();});
-$("mediaFile").onchange=async e=>{const f=e.target.files[0];if(!f||!roomId)return;try{const path=`chatMedia/${roomId}/${Date.now()}_${f.name}`,r=ref(storage,path);await uploadBytes(r,f);const url=await getDownloadURL(r);await addDoc(collection(db,"rooms",roomId,"messages"),{uid:me.uid,name:me.displayName||"বন্ধু",url,type:f.type.startsWith("video/")?"video":"image",createdAt:serverTimestamp()});}catch(err){alert("ফাইল পাঠানো যায়নি: "+err.message);}e.target.value="";};
-async function addStory(){const f=document.createElement("input");f.type="file";f.accept="image/*,video/*";f.onchange=async()=>{const file=f.files[0];if(!file)return;try{const r=ref(storage,`stories/${me.uid}/${Date.now()}_${file.name}`);await uploadBytes(r,file);const url=await getDownloadURL(r);await addDoc(collection(db,"stories"),{uid:me.uid,name:me.displayName||"বন্ধু",url,type:file.type,createdAt:serverTimestamp()});alert("স্ট্যাটাস যোগ হয়েছে");}catch(e){alert(e.message);}};f.click();}
-$("newChat").onclick=()=>{if(activeTab==="status")addStory();else if(activeTab==="calls")alert("প্রথমে কোনো বন্ধুর চ্যাট খুলে কল করুন");else alert("চ্যাট শুরু করতে তালিকা থেকে বন্ধুর নাম চাপুন");};
-document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{activeTab=t.dataset.tab;document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===t));["chats","status","calls","groups"].forEach(k=>$(k+"Panel").classList.toggle("hide",k!==activeTab));$("newChat").textContent=activeTab==="status"?"＋":"＋";});
-$("myProfile").onclick=async()=>{const s=await getDoc(doc(db,"users",me.uid)),u=s.data()||{};$("profileName").value=u.name||"";$("profileBio").value=u.bio||"";avatar($("profileAvatar"),u.name,u.photo);newPhoto=null;show("profile");};
-$("closeProfile").onclick=()=>hide("profile");
-$("profilePhoto").onchange=e=>{const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{newPhoto=reader.result;avatar($("profileAvatar"),$("profileName").value,newPhoto);};reader.readAsDataURL(f);};
-$("saveProfile").onclick=async()=>{const data={name:$("profileName").value.trim()||"বন্ধু",bio:$("profileBio").value.trim()};if(newPhoto){const r=ref(storage,`avatars/${me.uid}/${Date.now()}.jpg`);const blob=await (await fetch(newPhoto)).blob();await uploadBytes(r,blob);data.photo=await getDownloadURL(r);}await setDoc(doc(db,"users",me.uid),data,{merge:true});$("profileMsg").textContent="সেভ হয়েছে";};
-$("settingsBtn").onclick=()=>show("settings");$("closeSettings").onclick=()=>hide("settings");
-$("signOut").onclick=()=>signOut(auth);$("privacyInfo").onclick=()=>alert("আপনার Firebase Security Rules ঠিকভাবে সেট করুন।");
-$("themeToggle").onclick=()=>{document.body.classList.toggle("light");$("app").style.filter=document.body.classList.contains("light")?"brightness(1.04)":"none";};
+txtEl.addEventListener("input", syncBtns);
+setInterval(syncBtns, 250);
+syncBtns();
 
-// WebRTC one-to-one calls. Works only on supported secure browser contexts.
-async function startCall(video=true){
- if(!roomId){alert("আগে বন্ধুর চ্যাট খুলুন");return;}
- try{
-  localStream=await navigator.mediaDevices.getUserMedia({audio:true,video});
-  $("localVideo").srcObject=localStream;show("callScreen");
-  pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
-  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
-  pc.ontrack=e=>{$("remoteVideo").srcObject=e.streams[0];};
-  const callId=roomId+"_"+Date.now();callDocRef=doc(db,"calls",callId);
-  const offerCands=collection(callDocRef,"offerCandidates"),answerCands=collection(callDocRef,"answerCandidates");
-  pc.onicecandidate=e=>{if(e.candidate)addDoc(offerCands,e.candidate.toJSON());};
-  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
-  await setDoc(callDocRef,{from:me.uid,to:roomId.split("_").find(x=>x!==me.uid),offer:{type:offer.type,sdp:offer.sdp},status:"calling",createdAt:serverTimestamp()});
-  callUnsubs.push(onSnapshot(answerCands,s=>s.docChanges().forEach(c=>{if(c.type==="added")pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(()=>{});})));
-  callUnsubs.push(onSnapshot(callDocRef,s=>{const d=s.data();if(d?.answer&&!pc.currentRemoteDescription)pc.setRemoteDescription(new RTCSessionDescription(d.answer));if(d?.status==="ended")endCall(false);}));
-  $("callStatus").textContent=video?"ভিডিও কল চলছে":"অডিও কল চলছে";
- }catch(e){alert("কল চালু করা যায়নি: "+e.message);await endCall(false);}
-}
-async function endCall(notify=true){if(notify&&callDocRef)try{await updateDoc(callDocRef,{status:"ended"});}catch(e){}callUnsubs.forEach(u=>u());callUnsubs=[];if(pc){pc.close();pc=null;}if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}hide("callScreen");callDocRef=null;}
-$("voiceCall").onclick=()=>startCall(false);$("videoCall").onclick=()=>startCall(true);$("endCall").onclick=()=>endCall(true);
-$("muteBtn").onclick=()=>{const t=localStream?.getAudioTracks()[0];if(t)t.enabled=!t.enabled;};
-$("camBtn").onclick=()=>{const t=localStream?.getVideoTracks()[0];if(t)t.enabled=!t.enabled;};
-window.addEventListener("beforeunload",()=>{if(roomUnsub)roomUnsub();if(usersUnsub)usersUnsub();if(storiesUnsub)storiesUnsub();});
+
 </script>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, setDoc, doc, getDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// ====== এখানে তোমার firebaseConfig বসাও ======
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyD40E1QifHt5xQU935KOtfzi1wORCgvJrk",
+  authDomain: "friendschat-8a7fc.firebaseapp.com",
+  projectId: "friendschat-8a7fc",
+  storageBucket: "friendschat-8a7fc.firebasestorage.app",
+  messagingSenderId: "14697970142",
+  appId: "1:14697970142:web:137bb152271d8bd7fc454f",
+  measurementId: "G-4YHFYRRCJG"
+};
+// ==============================================
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const $ = (id) => document.getElementById(id);
+let me = null;
+let currentRoom = null;
+let unsubMsgs = null;
+let otherUid = null;
+
+// ---------- লগইন ----------
+const showErr = (e) => { $("loginErr").textContent = e.message || String(e); };
+$("gBtn").onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(showErr);
+$("fBtn").onclick = () => signInWithPopup(auth, new FacebookAuthProvider()).catch(showErr);
+$("pBtn").onclick = () => { $("phoneBox").style.display = "flex"; };
+
+let confirmation = null;
+$("sendOtp").onclick = async () => {
+  try {
+    if (!window.rv) window.rv = new RecaptchaVerifier(auth, "recaptcha", { size: "normal" });
+    confirmation = await signInWithPhoneNumber(auth, $("phoneNum").value.trim(), window.rv);
+    $("otpCode").classList.remove("hide");
+    $("verifyOtp").classList.remove("hide");
+  } catch (e) { showErr(e); }
+};
+$("verifyOtp").onclick = () => confirmation.confirm($("otpCode").value.trim()).catch(showErr);
+$("logout").onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async (user) => {
+  me = user;
+  if (user) {
+    const name = user.displayName || user.phoneNumber || "বন্ধু";
+    await setDoc(doc(db, "users", user.uid), { uid: user.uid, name, photo: user.photoURL || "", lastSeen: serverTimestamp() }, { merge: true });
+    $("login").classList.add("hide");
+    $("main").classList.remove("hide");
+    loadChats();
+    loadStories();
+    listenIncoming();
+  } else {
+    $("login").classList.remove("hide");
+    $("main").classList.add("hide");
+    $("room").classList.add("hide");
+  }
+});
+
+// ---------- ট্যাব ----------
+document.querySelectorAll(".tab").forEach((t) => {
+  t.onclick = () => {
+    document.querySelectorAll(".tab").forEach((x) => x.classList.remove("on"));
+    t.classList.add("on");
+    const isStory = t.dataset.t === "stories";
+    $("chatsList").classList.toggle("hide", isStory);
+    $("storiesList").classList.toggle("hide", !isStory);
+    $("addStory").classList.toggle("hide", !isStory);
+  };
+});
+
+function avatar(name, photo, ring) {
+  const d = document.createElement("div");
+  d.className = "av" + (ring ? " storyring" : "");
+  if (photo) d.style.backgroundImage = `url(${photo})`;
+  else { d.textContent = (name || "?")[0].toUpperCase(); d.style.background = "#075e54"; }
+  return d;
+}
+
+// ---------- চ্যাট তালিকা ----------
+function loadChats() {
+  onSnapshot(collection(db, "users"), (snap) => {
+    const box = $("chatsList");
+    box.innerHTML = "";
+    const g = document.createElement("div");
+    g.className = "item";
+    g.appendChild(avatar("গ", ""));
+    g.insertAdjacentHTML("beforeend", '<div><div class="nm">বন্ধুদের গ্রুপ</div><div class="sub">সবাই এখানে</div></div>');
+    g.onclick = () => openRoom("group", "বন্ধুদের গ্রুপ", null);
+    box.appendChild(g);
+    snap.forEach((d) => {
+      const u = d.data();
+      if (u.uid === me.uid) return;
+      const it = document.createElement("div");
+      it.className = "item";
+      it.appendChild(avatar(u.name, u.photo));
+      it.insertAdjacentHTML("beforeend", '<div><div class="nm"></div><div class="sub">চ্যাট করো</div></div>');
+      it.querySelector(".nm").textContent = u.name;
+      const roomId = [me.uid, u.uid].sort().join("_");
+      it.onclick = () => openRoom(roomId, u.name, u.uid);
+      box.appendChild(it);
+    });
+  });
+}
+  
+// ---------- চ্যাট রুম ----------
+async function openRoom(roomId, name, other) {
+  currentRoom = roomId;
+  otherUid = other;
+ $("roomHeader").onclick = async () => {
+  if (!otherUid) return;
+
+  try {
+    const snap = await getDoc(doc(db, "users", otherUid));
+    const u = snap.exists() ? snap.data() : {};
+
+    let panel = document.getElementById("friendProfileView");
+    if (panel) panel.remove();
+
+    panel = document.createElement("div");
+    panel.id = "friendProfileView";
+    panel.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      background:#fff;
+      padding:25px;
+      text-align:center;
+      overflow:auto;
+    `;
+
+    const back = document.createElement("button");
+    back.textContent = "← ফিরে যাও";
+    back.onclick = () => panel.remove();
+
+    const photo = document.createElement("img");
+    photo.src = u.photo || "";
+    photo.style.cssText = `
+      width:130px;
+      height:130px;
+      border-radius:50%;
+      object-fit:cover;
+      margin:35px auto 15px;
+    `;
+
+    const title = document.createElement("h2");
+    title.textContent = u.name || name || "বন্ধু";
+
+    const about = document.createElement("p");
+    about.textContent = u.bio || "কোনো বায়ো নেই";
+
+    panel.append(back, photo, title, about);
+    document.body.appendChild(panel);
+
+  } catch (error) {
+    alert("প্রোফাইল খুলতে সমস্যা হয়েছে: " + error.message);
+  }
+};
+  $("roomHeader").onclick = async () => {
+  if (!otherUid || otherUid === "group") return;
+
+  const snap = await getDoc(doc(db, "users", otherUid));
+  const u = snap.exists() ? snap.data() : {};
+
+  const old = $("friendProfileView");
+  if (old) old.remove();
+
+  const panel = document.createElement("div");
+  panel.id = "friendProfileView";
+  panel.style.cssText = `
+    position:fixed; inset:0; z-index:9999;
+    background:#f0f2f5; padding:25px;
+    text-align:center; overflow:auto;
+  `;
+
+  const close = document.createElement("button");
+  close.textContent = "← ফিরে যাও";
+  close.onclick = () => panel.remove();
+
+  const photo = document.createElement("img");
+  photo.src = u.photo || "";
+  photo.style.cssText =
+    "width:120px;height:120px;border-radius:50%;object-fit:cover;margin:35px auto 15px;";
+
+  const title = document.createElement("h2");
+  title.textContent = u.name || "বন্ধু";
+
+  const bio = document.createElement("p");
+  bio.textContent = u.bio || "কোনো বায়ো নেই";
+
+  panel.append(close, photo, title, bio);
+  document.body.appendChild(panel);
+};
+
+  $("roomName").textContent = name;
+ const friendSnap = await getDoc(doc(db, "users", otherUid));
+const friendData = friendSnap.exists() ? friendSnap.data() : {};
+
+$("roomPhoto").src = friendData.photo || "";
+$("roomPhoto").style.display = friendData.photo ? "block" : "none";
+watchStatus(other);
+  $("roomName").classList.toggle("vb", !!other);
+  $("room").classList.remove("hide");
+
+  $("vcall").style.display = other ? "" : "none";
+  $("acall").style.display = other ? "" : "none";
+
+  if (unsubMsgs) unsubMsgs();
+
+  const q = query(
+    collection(db, "rooms", roomId, "messages"),
+    orderBy("createdAt")
+  );
+
+  unsubMsgs = onSnapshot(q, (snap) => {
+    const box = $("msgs");
+    box.innerHTML = "";
+
+    snap.forEach((d) => {
+      const m = d.data();
+      const el = document.createElement("div");
+
+      el.className = "msg" + (m.uid === me.uid ? " me" : "");
+if (m.uid === me.uid) attachDelete(el, d.id);
+      if (m.uid !== me.uid && roomId === "group") {
+        const n = document.createElement("div");
+        n.className = "n";
+        n.textContent = m.name || "বন্ধু";
+        el.appendChild(n);
+      }
+
+     if (m.type === "voice") { el.classList.add("voice"); const a = document.createElement("audio"); a.src = m.url; a.controls = true; el.appendChild(a); }
+      if (m.type === "image") {
+        const i = document.createElement("img");
+        i.src = m.url;
+        el.appendChild(i);
+      } else if (m.type === "video") {
+        const v = document.createElement("video");
+        v.src = m.url;
+        v.controls = true;
+        el.appendChild(v);
+      }
+
+      if (m.text) {
+        const t = document.createElement("div");
+        t.textContent = m.text;
+        el.appendChild(t);
+      }
+
+      const tm = document.createElement("div");
+      tm.className = "t";
+      tm.textContent = m.createdAt
+        ? m.createdAt.toDate().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+          })
+        : "";
+
+      if (m.uid === me.uid && roomId !== "group") tm.appendChild(tickEl(m));
+      el.appendChild(tm);
+      
+      box.appendChild(el);
+    });
+
+   markRead(snap);
+    box.scrollTop = box.scrollHeight;
+  });
+}
+$("back").onclick = () => { $("room").classList.add("hide"); if (unsubMsgs) unsubMsgs(); currentRoom = null; };
+
+$("form").onsubmit = async (e) => {
+  e.preventDefault();
+  const text = $("txt").value.trim();
+  if (!text) return;
+  $("txt").value = "";
+  await addDoc(collection(db, "rooms", currentRoom, "messages"), {
+    type: "text", text, uid: me.uid, name: me.displayName || me.phoneNumber || "বন্ধু",replyTo: replyTo, createdAt: serverTimestamp()
+  });
+};
+
+// ---------- ছবি/ভিডিও পাঠানো ----------
+$("mediaFile").onchange = async (e) => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  if (!f.type.startsWith("image/")) { alert("এখন শুধু ছবি পাঠানো যাবে"); return; }
+  const img = new Image();
+  img.onload = async () => {
+    const max = 800;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * scale);
+    c.height = Math.round(img.height * scale);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const url = c.toDataURL("image/jpeg", 0.6);
+    await addDoc(collection(db, "rooms", currentRoom, "messages"), {
+      type: "image", url, text: "", uid: me.uid,
+      name: me.displayName || me.phoneNumber || "বন্ধু", createdAt: serverTimestamp()
+    });
+  };
+  img.src = URL.createObjectURL(f);
+};
+
+// ---------- স্টোরি (২৪ ঘন্টা) ----------
+$("addStory").onclick = () => $("storyFile").click();
+$("storyFile").onchange = async (e) => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  if (!f.type.startsWith("image/")) { alert("এখন শুধু ছবি-স্টোরি দেওয়া যাবে"); return; }
+  const img = new Image();
+  img.onload = async () => {
+    const max = 600;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * scale);
+    c.height = Math.round(img.height * scale);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const url = c.toDataURL("image/jpeg", 0.6);
+    await addDoc(collection(db, "stories"), {
+      url, kind: "image", uid: me.uid,
+      name: me.displayName || me.phoneNumber || "বন্ধু", photo: "", createdAt: serverTimestamp(), ts: Date.now()
+    });
+    alert("স্টোরি দেওয়া হয়েছে");
+  };
+  img.src = URL.createObjectURL(f);
+};
+
+function loadStories() {
+  (collection(db, "stories"), (snap) => {
+    const box = $("storiesList");
+    box.innerHTML = "";
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    const byUser = {};
+    snap.forEach((d) => {
+      const s = d.data();
+      if (s.ts < cutoff) return;
+      (byUser[s.uid] = byUser[s.uid] || []).push(s);
+    });
+    Object.values(byUser).forEach((list) => {
+      list.sort((a, b) => a.ts - b.ts);
+      const s0 = list[0];
+      const it = document.createElement("div");
+      it.className = "item";
+      it.appendChild(avatar(s0.name, s0.photo, true));
+      it.insertAdjacentHTML("beforeend", '<div><div class="nm"></div><div class="sub"></div></div>');
+      it.querySelector(".nm").textContent = s0.uid === me.uid ? "আমার স্টোরি" : s0.name;
+      it.querySelector(".sub").textContent = list.length + " টি স্টোরি";
+      it.onclick = () => viewStories(list, 0);
+      box.appendChild(it);
+    });
+    if (!box.children.length) box.innerHTML = '<p style="padding:20px;color:#777">কোনো স্টোরি নেই। + চাপলে নিজেরটা দাও।</p>';
+  });
+}
+// ---------- স্টোরি দেখানো ----------
+function viewStories(list, i) {
+  if (i >= list.length) {
+    $("viewer").classList.add("hide");
+    return;
+  }
+
+  const s = list[i];
+
+  $("viewer").classList.remove("hide");
+  $("viewerName").textContent = s.name || "বন্ধু";
+
+  const body = $("viewerBody");
+  body.innerHTML = "";
+
+  let el;
+
+  if (s.kind === "video") {
+    el = document.createElement("video");
+    el.src = s.url;
+    el.autoplay = true;
+    el.controls = true;
+    el.playsInline = true;
+
+    el.onended = () => {
+      viewStories(list, i + 1);
+    };
+
+  } else {
+    el = document.createElement("img");
+    el.src = s.url;
+
+    setTimeout(() => {
+      if (!$("viewer").classList.contains("hide")) {
+        viewStories(list, i + 1);
+      }
+    }, 5000);
+  }
+
+  body.appendChild(el);
+}
+$("closeViewer").onclick = () => $("viewer").classList.add("hide");
+
+// ===== কলিং অংশ পার্ট ৩ এ আসবে, এই লাইনের নিচে বসবে =====
+  // ===================== কল (WebRTC) =====================
+const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }] };
+let pc = null, localStream = null, callDocRef = null, callUnsubs = [], isVideoCall = true, inCall = false;
+
+async function getMedia(video) {
+  localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: video });
+  $("localVideo").srcObject = localStream;
+  $("localVideo").style.display = video ? "block" : "none";
+}
+
+function makePC() {
+  pc = new RTCPeerConnection(ICE);
+  localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+  const remote = new MediaStream();
+  $("remoteVideo").srcObject = remote;
+  pc.ontrack = (e) => e.streams[0].getTracks().forEach((t) => remote.addTrack(t));
+  pc.onconnectionstatechange = () => {
+    if (pc && (pc.connectionState === "disconnected" || pc.connectionState === "failed")) endCall(false);
+  };
+}
+
+async function startCall(video) {
+  if (inCall) return;
+  inCall = true;
+  isVideoCall = video;
+  try { await getMedia(video); } catch (e) { alert("ক্যামেরা/মাইক্রোফোনের অনুমতি দাও"); inCall = false; return; }
+  makePC();
+  $("call").classList.remove("hide");
+  $("callInfo").textContent = $("roomName").textContent + " কে কল করা হচ্ছে...";
+  callDocRef = doc(collection(db, "calls"));
+  const offerCands = collection(callDocRef, "offerCandidates");
+  const answerCands = collection(callDocRef, "answerCandidates");
+  pc.onicecandidate = (e) => { if (e.candidate) addDoc(offerCands, e.candidate.toJSON()); };
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  await setDoc(callDocRef, {
+    from: me.uid, fromName: me.displayName || me.phoneNumber || "বন্ধু", to: otherUid,
+    video, status: "ringing", offer: { type: offer.type, sdp: offer.sdp }, ts: Date.now()
+  });
+  push(
+    (callDocRef, async (s) => {
+    const d = s.data();
+    if (!d) return;
+    if (d.answer && !pc.currentRemoteDescription) {
+      await pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+      $("callInfo").textContent = "কথা চলছে";
+    }
+    if (d.status === "ended" || d.status === "rejected") endCall(false);
+  }));
+  callUnsubs.push(onSnapshot(answerCands, (snap) => {
+    snap.docChanges().forEach((c) => { if (c.type === "added") pc.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
+  }));
+}
+
+let incomingCall = null;
+function listenIncoming() {callUnsubs
+  const q = query(collection(db, "calls"), where("to", "==", me.uid), where("status", "==", "ringing"));
+  onSnapshot(q, (snap) => {
+    snap.docChanges().forEach((c) => {
+      if (c.type === "added" && !inCall) {
+        const d = c.doc.data();
+        if (Date.now() - d.ts > 60000) return;
+        incomingCall = { id: c.doc.id, data: d };
+        $("incName").textContent = d.fromName + (d.video ? " ভিডিও কল করছে" : " অডিও কল করছে");
+        $("incoming").classList.remove("hide");
+      }
+    });
+  });
+}
+
+$("accept").onclick = async () => {
+  $("incoming").classList.add("hide");
+  const { id, data } = incomingCall;
+  inCall = true;
+  isVideoCall = data.video;
+  try { await getMedia(data.video); } catch (e) { alert("ক্যামেরা/মাইক্রোফোনের অনুমতি দাও"); inCall = false; return; }
+  makePC();
+  $("call").classList.remove("hide");
+  $("callInfo").textContent = data.fromName;
+  callDocRef = doc(db, "calls", id);
+  const offerCands = collection(callDocRef, "offerCandidates");
+  const answerCands = collection(callDocRef, "answerCandidates");
+  pc.onicecandidate = (e) => { if (e.candidate) addDoc(answerCands, e.candidate.toJSON()); };
+  await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  await updateDoc(callDocRef, { answer: { type: answer.type, sdp: answer.sdp }, status: "active" });
+  callUnsubs.push(onSnapshot(offerCands, (snap) => {
+    snap.docChanges().forEach((c) => { if (c.type === "added") pc.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
+  }));
+  callUnsubs.push(onSnapshot(callDocRef, (s) => {
+    const d = s.data();
+    if (d && d.status === "ended") endCall(false);
+  }));
+};
+
+$("reject").onclick = async () => {
+  $("incoming").classList.add("hide");
+  if (incomingCall) await updateDoc(doc(db, "calls", incomingCall.id), { status: "rejected" });
+};
+
+async function endCall(notify = true) {
+  if (notify && callDocRef) { try { await updateDoc(callDocRef, { status: "ended" }); } catch (e) {} }
+  callUnsubs.forEach((u) => u());
+  callUnsubs = [];
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+  $("call").classList.add("hide");
+  $("incoming").classList.add("hide");
+  inCall = false;
+  callDocRef = null;
+}
+$("endBtn").onclick = () => endCall(true);
+$("vcall").onclick = () => startCall(true);
+$("acall").onclick = () => startCall(false);
+
+// মিউট, ক্যামেরা অন/অফ
+$("muteBtn").onclick = () => {
+  const t = localStream && localStream.getAudioTracks()[0];
+  if (t) { t.enabled = !t.enabled; $("muteBtn").style.opacity = t.enabled ? 1 : 0.4; }
+};
+$("camBtn").onclick = () => {
+  const t = localStream && localStream.getVideoTracks()[0];
+  if (t) { t.enabled = !t.enabled; $("camBtn").style.opacity = t.enabled ? 1 : 0.4; }
+};
+
+// স্ক্রিন শেয়ার (ফোনের ব্রাউজারে সব সময় চলে না, কম্পিউটারে ভালো চলে)
+let sharing = false;
+$("shareBtn").onclick = async () => {
+  if (!pc) return;
+  if (!navigator.mediaDevices.getDisplayMedia) { alert("এই ডিভাইসে স্ক্রিন শেয়ার চলে না"); return; }
+  const sender = pc.getSenders().find((s) => s.track && s.track.kind === "video");
+  try {
+    if (!sharing) {
+      const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      const track = screen.getVideoTracks()[0];
+      if (sender) await sender.replaceTrack(track);
+      else pc.addTrack(track, screen);
+      $("localVideo").srcObject = screen;
+      sharing = true;
+      track.onended = stopShare;
+    } else { stopShare(); }
+  } catch (e) {}
+};
+async function stopShare() {
+  sharing = false;
+  const cam = localStream && localStream.getVideoTracks()[0];
+  const sender = pc && pc.getSenders().find((s) => s.track && s.track.kind === "video");
+  if (sender && cam) await sender.replaceTrack(cam);
+  $("localVideo").srcObject = localStream;
+}
+// ===== প্রোফাইল =====
+let newPhoto = null;
+function paintAv(el, name, photo) {
+  if (photo) { el.style.backgroundImage = `url(${photo})`; el.textContent = ""; }
+  else { el.style.backgroundImage = "none"; el.textContent = (name || "?")[0].toUpperCase(); }
+}
+$("myProfile").onclick = async () => {
+  const s = await getDoc(doc(db, "users", me.uid));
+  const u = s.data() || {};
+  $("pName").value = u.name || "";
+  $("pBio").value = u.bio || "";
+  newPhoto = null;
+  paintAv($("pAv"), u.name, u.photo);
+  $("pMsg").textContent = "";
+  $("profile").classList.remove("hide");
+};
+$("pBack").onclick = () => $("profile").classList.add("hide");
+$("pAv").onclick = () => $("pFile").click();
+$("pFile").onchange = (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    const size = 200;
+    const m = Math.min(img.width, img.height);
+    c.width = size; c.height = size;
+    c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size);
+    newPhoto = c.toDataURL("image/jpeg", 0.7);
+    paintAv($("pAv"), $("pName").value, newPhoto);
+  };
+  img.src = URL.createObjectURL(f);
+};
+$("saveProfile").onclick = async () => {
+  const name = $("pName").value.trim() || "বন্ধু";
+  const data = { name, bio: $("pBio").value.trim() };
+  if (newPhoto) data.photo = newPhoto;
+  await setDoc(doc(db, "users", me.uid), data, { merge: true });
+  $("pMsg").textContent = "সেভ হয়েছে ✔";
+};
+// ===== নিচের ট্যাব =====
+function showPane(n) {
+  document.querySelectorAll("#bottomNav div").forEach((d) => d.classList.toggle("on", d.dataset.n === n));
+  $("chatsList").classList.toggle("hide", n !== "chats");
+  $("storiesList").classList.toggle("hide", n !== "updates");
+  $("soonList").classList.toggle("hide", n !== "comm" && n !== "calls");
+  $("statusRow").classList.toggle("hide", n !== "chats");
+  $("searchWrap").classList.toggle("hide", n === "comm" || n === "calls");
+  $("addStory").classList.toggle("hide", n !== "updates");
+  if (n === "comm") $("soonText").textContent = "কমিউনিটি খুব শীঘ্রই আসছে";
+  if (n === "calls") $("soonText").textContent = "কল করতে কোনো বন্ধুর চ্যাট খুলে ওপরের 📞 বা 📹 চাপো";
+}
+document.querySelectorAll("#bottomNav div").forEach((d) => { d.onclick = () => showPane(d.dataset.n); });
+showPane("chats");
+
+// ===== সার্চ =====
+$("searchBox").oninput = () => {
+  const t = $("searchBox").value.toLowerCase();
+  document.querySelectorAll("#chatsList .item").forEach((it) => {
+    const nm = it.querySelector(".nm");
+    it.style.display = !t || (nm && nm.textContent.toLowerCase().includes(t)) ? "" : "none";
+  });
+};
+
+// ===== মেসেজ ডিলিট (চেপে ধরো) =====
+let pressTimer = null;
+function attachDelete(el, msgId) {
+  const start = () => { pressTimer = setTimeout(() => askDelete(msgId), 600); };
+  const stop = () => clearTimeout(pressTimer);
+  el.addEventListener("touchstart", start, { passive: true });
+  el.addEventListener("touchend", stop);
+  el.addEventListener("touchmove", stop);
+  el.addEventListener("contextmenu", (e) => { e.preventDefault(); askDelete(msgId); });
+}
+function askDelete(msgId) {
+  if (document.getElementById("delBar")) return;
+  const bar = document.createElement("div");
+  bar.id = "delBar";
+  const no = document.createElement("button");
+  no.textContent = "না";
+  no.style.background = "#eee";
+  const yes = document.createElement("button");
+  yes.textContent = "মুছে দাও";
+  yes.style.background = "#e53935";
+  yes.style.color = "#fff";
+  bar.appendChild(no);
+  bar.appendChild(yes);
+  $("room").appendChild(bar);
+  no.onclick = () => bar.remove();
+  yes.onclick = async () => {
+    await deleteDoc(doc(db, "rooms", currentRoom, "messages", msgId));
+    bar.remove();
+  };
+}
+// ===== অনলাইন স্ট্যাটাস =====
+setInterval(() => {
+  if (me) setDoc(doc(db, "users", me.uid), { lastSeen: Date.now() }, { merge: true });
+}, 20000);
+function isOnline(u) { return u.lastSeen && typeof u.lastSeen === "number" && Date.now() - u.lastSeen < 45000; }
+onSnapshot(collection(db, "users"), (snap) => {
+  const items = document.querySelectorAll("#chatsList .item");
+  const online = {};
+  snap.forEach((d) => { const u = d.data(); online[u.name] = isOnline(u); });
+  items.forEach((it) => {
+    const nm = it.querySelector(".nm");
+    const sub = it.querySelector(".sub");
+    if (nm && sub && online[nm.textContent] !== undefined) {
+      sub.textContent = online[nm.textContent] ? "অনলাইন" : "অফলাইন";
+      sub.style.color = online[nm.textContent] ? "#25d366" : "#667781";
+    }
+  });
+});
+
+// ===== টাইপ করছে =====
+let typingTimer = null;
+$("txt").addEventListener("input", () => {
+  if (!currentRoom || !me) return;
+  setDoc(doc(db, "typing", currentRoom + "_" + me.uid), { room: currentRoom, uid: me.uid, name: me.displayName || "বন্ধু", ts: Date.now() });
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => setDoc(doc(db, "typing", currentRoom + "_" + me.uid), { room: currentRoom, uid: me.uid, name: "", ts: 0 }), 2500);
+});
+onSnapshot(collection(db, "typing"), (snap) => {
+  let who = "";
+  snap.forEach((d) => {
+    const t = d.data();
+    if (t.room === currentRoom && t.uid !== (me && me.uid) && Date.now() - t.ts < 4000 && t.name) who = t.name + " টাইপ করছে...";
+  });
+  if ($("typing")) $("typing").textContent = who;
+});
+
+// ===== পড়া হয়েছে (ডাবল টিক) =====
+async function markRead(snap) {
+  snap.forEach((d) => {
+    const m = d.data();
+    if (m.uid !== me.uid && !m.read && currentRoom !== "group") {
+      updateDoc(doc(db, "rooms", currentRoom, "messages", d.id), { read: true });
+    }
+  });
+}
+function tickEl(m) {
+  const s = document.createElement("span");
+  s.className = "tick" + (m.read ? " read" : "");
+  s.textContent = m.read ? "✓✓" : "✓";
+  return s;
+}
+// ===== মেসেজে চেপে ধরলে মেনু: রিপ্লাই / রিঅ্যাকশন / ডিলিট =====
+let replyTo = null;
+function openActions(m, msgId, el) {
+  if (document.getElementById("actBar")) return;
+  const bar = document.createElement("div");
+  bar.id = "actBar";
+  const emojis = document.createElement("div");
+  emojis.id = "emojiBar";
+  ["👍", "❤️", "😂", "😮", "😢", "🙏"].forEach((em) => {
+    const s = document.createElement("span");
+    s.textContent = em;
+    s.onclick = async () => {
+      await updateDoc(doc(db, "rooms", currentRoom, "messages", msgId), { react: em });
+      close();
+    };
+    emojis.appendChild(s);
+  });
+  const rep = document.createElement("button");
+  rep.textContent = "রিপ্লাই";
+  rep.onclick = () => {
+    replyTo = { name: m.name, text: m.text || (m.type === "image" ? "📷 ছবি" : "🎤 ভয়েস") };
+    $("replyText").textContent = replyTo.name + ": " + replyTo.text;
+    $("replyBar").style.display = "flex";
+    $("txt").focus();
+    close();
+  };
+  const del = document.createElement("button");
+  del.textContent = "ডিলিট";
+  del.style.color = "#e53935";
+  del.onclick = async () => {
+    await deleteDoc(doc(db, "rooms", currentRoom, "messages", msgId));
+    close();
+  };
+  const no = document.createElement("button");
+  no.textContent = "বন্ধ";
+  no.onclick = () => close();
+  bar.appendChild(rep);
+  if (m.uid === me.uid) bar.appendChild(del);
+  bar.appendChild(no);
+  function close() { bar.remove(); emojis.remove(); }
+  $("room").appendChild(emojis);
+  $("room").appendChild(bar);
+}
+$("replyX").onclick = () => { replyTo = null; $("replyBar").style.display = "none"; };
+
+// ===== ভয়েস মেসেজ (মাইক চেপে ধরো, ছাড়লে চলে যাবে, সর্বোচ্চ ২০ সেকেন্ড) =====
+let recorder = null, chunks = [], recTimeout = null;
+const mic = $("micBtn");
+async function startRec() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream);
+    chunks = [];
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+    recorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      mic.classList.remove("rec");
+      const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+      if (blob.size > 700000) { alert("ভয়েস মেসেজ বেশি বড়, ছোট করে বলো"); return; }
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        await addDoc(collection(db, "rooms", currentRoom, "messages"), {
+          type: "voice", url: reader.result, text: "", uid: me.uid,
+          name: me.displayName || me.phoneNumber || "বন্ধু", createdAt: serverTimestamp()
+        });
+      };
+      reader.readAsDataURL(blob);
+    };
+    recorder.start();
+    mic.classList.add("rec");
+    recTimeout = setTimeout(stopRec, 20000);
+  } catch (e) { alert("মাইকের অনুমতি দাও"); }
+}
+function stopRec() {
+  clearTimeout(recTimeout);
+  if (recorder && recorder.state === "recording") recorder.stop();
+}
+mic.addEventListener("touchstart", (e) => { e.preventDefault(); startRec(); }, { passive: false });
+mic.addEventListener("touchend", stopRec);
+mic.addEventListener("mousedown", startRec);
+mic.addEventListener("mouseup", stopRec);
+// ===== বন্ধুদের ইনভাইট =====
+(function () {
+  const list = $("chatsList");
+  const row = document.createElement("div");
+  row.id = "inviteBtn";
+  const ic = document.createElement("div");
+  ic.className = "ic";
+  ic.textContent = "🔗";
+  const box = document.createElement("div");
+  const t1 = document.createElement("div");
+  t1.className = "invT";
+  t1.textContent = "বন্ধুদের ইনভাইট করো";
+  const t2 = document.createElement("div");
+  t2.className = "invS";
+  t2.textContent = "লিংক পাঠিয়ে বন্ধুকে ডেকে আনো";
+  box.appendChild(t1);
+  box.appendChild(t2);
+  row.appendChild(ic);
+  row.appendChild(box);
+  row.onclick = async () => {
+    const text = "চলো Friends Chat এ কথা বলি! লিংকটা ক্রোম ব্রাউজারে খুলে Google দিয়ে ঢোকো: " + location.origin;
+    try {
+      if (navigator.share) { await navigator.share({ title: "Friends Chat", text: text }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("লিংক কপি হয়েছে, বন্ধুকে পাঠিয়ে দাও");
+    } catch (e) {
+      prompt("এই লেখাটা কপি করে বন্ধুকে পাঠাও:", text);
+    }
+  };
+  const keep = () => { if (list.lastChild !== row) list.appendChild(row); };
+  new MutationObserver(keep).observe(list, { childList: true });
+  keep();
+})();
+// ===== অনলাইন / সর্বশেষ দেখা =====
+setInterval(() => {
+  if (me && !document.hidden) setDoc(doc(db, "users", me.uid), { lastSeen: Date.now() }, { merge: true });
+}, 20000);
+
+function lastSeenText(ts) {
+  const ms = typeof ts === "number" ? ts : (ts && ts.toMillis ? ts.toMillis() : 0);
+  if (!ms) return { online: false, text: "অফলাইন" };
+  if (Date.now() - ms < 60000) return { online: true, text: "● অনলাইন" };
+  const d = new Date(ms);
+  const t = d.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" });
+  const same = d.toDateString() === new Date().toDateString();
+  const day = same ? "আজ " : d.toLocaleDateString("bn-BD") + " ";
+  return { online: false, text: "সর্বশেষ দেখা " + day + t };
+}
+
+let statusTimer = null;
+function watchStatus(uid) {
+  clearInterval(statusTimer);
+  const el = $("roomStatus");
+  if (!uid) { el.textContent = ""; return; }
+  const refresh = async () => {
+    const s = await getDoc(doc(db, "users", uid));
+    const r = lastSeenText(s.exists() ? s.data().lastSeen : null);
+    el.textContent = r.text;
+    el.style.color = r.online ? "#34b7f1" : "#d0e0dd";
+  };
+  refresh();
+  statusTimer = setInterval(refresh, 15000);
+}
+$("back").addEventListener("click", () => clearInterval(statusTimer));
+  // ===== সব ফিচার: থ্রি ডট মেনু + কিবোর্ড বার =====
+(function () {
+  const $id = (x) => document.getElementById(x);
+  const roomEl = $id("room"), msgs = $id("msgs"), txt = $id("txt");
+  const LS = {
+    get: (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const rid = () => currentRoom || "none";
+  const ROW = "padding:16px 6px;font-size:17px;border-bottom:1px solid #eee;cursor:pointer;display:flex;align-items:center;gap:12px";
+
+  function toast(m) {
+    const t = document.createElement("div");
+    t.textContent = m;
+    t.style.cssText = "position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:20px;z-index:80;font-size:15px;text-align:center";
+    roomEl.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+  }
+
+  function panel(title, build) {
+    const old = $id("wPanel"); if (old) old.remove();
+    const p = document.createElement("div");
+    p.id = "wPanel";
+    p.style.cssText = "position:absolute;inset:0;background:#fff;z-index:60;display:flex;flex-direction:column";
+    const h = document.createElement("div");
+    h.style.cssText = "display:flex;align-items:center;gap:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.2);font-size:19px;font-weight:bold";
+    const b = document.createElement("span");
+    b.textContent = "←"; b.style.cssText = "font-size:26px;cursor:pointer"; b.onclick = () => p.remove();
+    const t = document.createElement("span"); t.textContent = title;
+    h.append(b, t);
+    const body = document.createElement("div");
+    body.style.cssText = "flex:1;overflow-y:auto;padding:14px 16px";
+    p.append(h, body);
+    roomEl.appendChild(p);
+    build(body, p);
+  }
+
+  function choose(title, opts, cur, onPick) {
+    panel(title, (body, p) => {
+      opts.forEach(([label, val]) => {
+        const r = document.createElement("div");
+        r.style.cssText = ROW;
+        r.innerHTML = '<span style="width:20px;height:20px;border-radius:50%;border:2px solid #1fa855;display:inline-block;background:' + (val === cur ? '#1fa855' : '#fff') + '"></span><span>' + label + '</span>';
+        r.onclick = () => { p.remove(); onPick(val); };
+        body.appendChild(r);
+      });
+    });
+  }
+
+  function listPanel(title, rows) {
+    panel(title, (body, p) => {
+      rows.forEach(([label, fn]) => {
+        const r = document.createElement("div");
+        r.style.cssText = ROW; r.textContent = label;
+        r.onclick = () => { p.remove(); fn(); };
+        body.appendChild(r);
+      });
+    });
+  }
+
+  // ---------- রুমের অবস্থা (থিম, ব্লক, ক্লিয়ার, ডিসঅ্যাপিয়ারিং) ----------
+  const blocked = () => !!LS.get("block_" + rid(), false);
+  const isMuted = () => { const v = LS.get("mute_" + rid(), 0); return v === -1 || v > Date.now(); };
+
+  function applyRoomState() {
+    const r = rid();
+    const c = LS.get("theme_" + r, "");
+    roomEl.style.background = c;
+    const ty = $id("typing"); if (ty) ty.style.background = c;
+    msgs.classList.toggle("wBlocked", blocked());
+    const all = Array.from(msgs.querySelectorAll(".msg"));
+    const clr = LS.get("clear_" + r, 0);
+    const dis = LS.get("dis_" + r, { h: 0, seen: [] });
+    for (let i = dis.seen.length; i < all.length; i++) dis.seen.push(Date.now());
+    LS.set("dis_" + r, dis);
+    all.forEach((m, i) => {
+      const gone = i < clr || (dis.h > 0 && Date.now() - dis.seen[i] > dis.h * 3600000);
+      m.classList.toggle("wGone", gone);
+    });
+  }
+  setInterval(applyRoomState, 60000);
+
+  // নতুন মেসেজ এলে বিপ শব্দ (মিউট থাকলে হবে না)
+  function beep() {
+    try {
+      const a = new (window.AudioContext || window.webkitAudioContext)();
+      const o = a.createOscillator(), g = a.createGain();
+      o.connect(g); g.connect(a.destination);
+      o.frequency.value = 880; g.gain.value = 0.1;
+      o.start(); o.stop(a.currentTime + 0.15);
+    } catch (e) {}
+  }
+  let lastRoom = null, lastCount = 0;
+  new MutationObserver(() => {
+    applyRoomState();
+    const all = msgs.querySelectorAll(".msg"), n = all.length;
+    if (currentRoom !== lastRoom) { lastRoom = currentRoom; lastCount = n; return; }
+    if (n > lastCount && lastCount > 0) {
+      const l = all[n - 1];
+      if (l && !l.classList.contains("me") && !isMuted() && !blocked()) beep();
+    }
+    lastCount = n;
+  }).observe(msgs, { childList: true });
+
+  // ব্লক করলে মেসেজ পাঠানো বন্ধ
+  $id("form").addEventListener("submit", (e) => {
+    if (blocked()) { e.preventDefault(); e.stopImmediatePropagation(); toast("মেসেজ পাঠাতে আগে Unblock করো"); }
+  }, true);
+
+  // ---------- মেনুর অপশন ----------
+  function viewContact() {
+    if (otherUid) $id("roomHeader").click(); else toast("এটা গ্রুপ চ্যাট");
+  }
+
+  function searchBar() {
+    let bar = $id("wSearch");
+    if (bar) bar.remove();
+    bar = document.createElement("div");
+    bar.id = "wSearch";
+    bar.style.cssText = "display:flex;gap:8px;padding:8px 12px;background:#fff;align-items:center";
+    const inp = document.createElement("input");
+    inp.placeholder = "Search...";
+    inp.style.cssText = "flex:1;padding:10px 14px;border:none;border-radius:20px;background:#f0f2f5;font-size:16px;outline:none";
+    const x = document.createElement("span");
+    x.textContent = "✖"; x.style.cssText = "font-size:20px;cursor:pointer;padding:4px 8px";
+    const show = (q) => msgs.querySelectorAll(".msg").forEach((m) => { m.style.display = m.textContent.toLowerCase().includes(q) ? "" : "none"; });
+    inp.oninput = () => show(inp.value.toLowerCase());
+    x.onclick = () => { bar.remove(); show(""); };
+    bar.append(inp, x);
+    roomEl.insertBefore(bar, msgs);
+    inp.focus();
+  }
+
+  function mediaPanel() {
+    panel("Media, links, and docs", (body) => {
+      const media = Array.from(msgs.querySelectorAll(".msg img, .msg video"));
+      const h1 = document.createElement("div");
+      h1.textContent = "Media (" + media.length + ")";
+      h1.style.cssText = "font-weight:bold;color:#075e54;margin:6px 0 10px";
+      const grid = document.createElement("div");
+      grid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:4px";
+      media.forEach((el) => {
+        const c = el.cloneNode(true);
+        if (c.tagName === "VIDEO") c.controls = true;
+        c.style.cssText = "width:100%;height:110px;object-fit:cover;border-radius:4px";
+        grid.appendChild(c);
+      });
+      const links = [];
+      msgs.querySelectorAll(".msg").forEach((m) => {
+        const c = m.cloneNode(true);
+        c.querySelectorAll(".t,.n,.react,.reply").forEach((e) => e.remove());
+        (c.textContent.match(/https?:\/\/\S+/g) || []).forEach((l) => links.push(l));
+      });
+      const h2 = document.createElement("div");
+      h2.textContent = "Links (" + links.length + ")";
+      h2.style.cssText = "font-weight:bold;color:#075e54;margin:18px 0 10px";
+      body.append(h1, grid, h2);
+      links.forEach((l) => {
+        const a = document.createElement("a");
+        a.href = l; a.textContent = l; a.target = "_blank";
+        a.style.cssText = "display:block;padding:10px 0;border-bottom:1px solid #eee;color:#1877f2;word-break:break-all";
+        body.appendChild(a);
+      });
+    });
+  }
+
+  function mutePanel() {
+    if (isMuted()) { LS.set("mute_" + rid(), 0); toast("Notifications চালু হলো"); return; }
+    choose("Mute notifications", [["8 hours", 8], ["1 week", 168], ["Always", -1]], null, (h) => {
+      LS.set("mute_" + rid(), h === -1 ? -1 : Date.now() + h * 3600000);
+      toast("Muted");
+    });
+  }
+
+  function disPanel() {
+    const dis = LS.get("dis_" + rid(), { h: 0, seen: [] });
+    choose("Disappearing messages", [["24 hours", 24], ["7 days", 168], ["Off", 0]], dis.h, (h) => {
+      const d = LS.get("dis_" + rid(), { h: 0, seen: [] });
+      d.h = h; LS.set("dis_" + rid(), d);
+      applyRoomState();
+      toast(h ? "এখন থেকে মেসেজ " + (h === 24 ? "২৪ ঘণ্টা" : "৭ দিন") + " পর লুকাবে" : "Off করা হলো");
+    });
+  }
+
+  function themePanel() {
+    const cols = [["Default", ""], ["Green", "#d9fdd3"], ["Blue", "#dbe9f6"], ["Pink", "#fbe4ee"], ["Yellow", "#fff6cc"], ["Dark", "#0b141a"]];
+    panel("Chat theme", (body, p) => {
+      const g = document.createElement("div");
+      g.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:10px";
+      cols.forEach(([n, c]) => {
+        const s = document.createElement("div");
+        s.textContent = n;
+        s.style.cssText = "height:90px;border-radius:12px;border:2px solid #ccc;display:flex;align-items:flex-end;justify-content:center;padding:6px;font-size:14px;cursor:pointer;background:" + (c || "#efeae2") + (c === "#0b141a" ? ";color:#fff" : "");
+        s.onclick = () => { LS.set("theme_" + rid(), c); applyRoomState(); p.remove(); };
+        g.appendChild(s);
+      });
+      body.appendChild(g);
+    });
+  }
+
+  function exportChat() {
+    const lines = [];
+    msgs.querySelectorAll(".msg").forEach((m) => {
+      if (m.classList.contains("wGone")) return;
+      const c = m.cloneNode(true);
+      const who = m.classList.contains("me") ? "Me" : ((m.querySelector(".n") || {}).textContent || "");
+      const tm = (m.querySelector(".t") || {}).textContent || "";
+      c.querySelectorAll(".n,.t,.react,.reply").forEach((e) => e.remove());
+      lines.push("[" + tm + "] " + who + ": " + (c.querySelector("img,video") ? "[media] " : "") + c.textContent.trim());
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain" }));
+    a.download = "chat.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function morePanel() {
+    listPanel("More", [
+      [blocked() ? "Unblock" : "Block", () => {
+        LS.set("block_" + rid(), !blocked()); applyRoomState();
+        toast(blocked() ? "Blocked" : "Unblocked");
+      }],
+      ["Clear chat", () => {
+        if (!confirm("এই চ্যাটের সব মেসেজ তোমার ফোন থেকে মুছবে?")) return;
+        LS.set("clear_" + rid(), msgs.querySelectorAll(".msg").length);
+        applyRoomState(); toast("Chat cleared");
+      }],
+      ["Export chat", exportChat]
+    ]);
+  }
+
+  // ---------- New group ----------
+  function newGroup() {
+    if (!me) return;
+    panel("New group", (body, p) => {
+      const name = document.createElement("input");
+      name.placeholder = "গ্রুপের নাম"; name.maxLength = 40;
+      name.style.cssText = "width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px;margin-bottom:12px";
+      const list = document.createElement("div");
+      const btn = document.createElement("button");
+      btn.textContent = "গ্রুপ বানাও";
+      btn.style.cssText = "width:100%;padding:14px;margin-top:16px;background:#1fa855;color:#fff;border:none;border-radius:8px;font-size:17px";
+      body.append(name, list, btn);
+      const picked = new Set();
+      getDocs(collection(db, "users")).then((snap) => {
+        snap.forEach((d) => {
+          const u = d.data();
+          if (u.uid === me.uid) return;
+          const r = document.createElement("label");
+          r.style.cssText = "display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eee;font-size:17px";
+          const cb = document.createElement("input");
+          cb.type = "checkbox"; cb.style.cssText = "width:20px;height:20px";
+          cb.onchange = () => { cb.checked ? picked.add(u.uid) : picked.delete(u.uid); };
+          const s = document.createElement("span"); s.textContent = u.name || "বন্ধু";
+          r.append(cb, s); list.appendChild(r);
+        });
+      }).catch((e) => { list.textContent = "লোড হয়নি: " + e.message; });
+      btn.onclick = async () => {
+        const nm = name.value.trim();
+        if (!nm) { toast("নাম লেখো"); return; }
+        if (!picked.size) { toast("অন্তত একজনকে বাছাই করো"); return; }
+        try {
+          const ref = await addDoc(collection(db, "groups"), { name: nm, members: [me.uid, ...picked], createdBy: me.uid, createdAt: serverTimestamp() });
+          p.remove();
+          openRoom("grp_" + ref.id, nm, null);
+        } catch (e) {
+          alert("গ্রুপ বানানো যায়নি: " + e.message + "\n(Firebase Rules-এ groups কালেকশন অনুমোদন দিতে হবে)");
+        }
+      };
+    });
+  }
+
+  let groups = [], gUnsub = null;
+  function renderGroups() {
+    const box = $id("chatsList");
+    box.querySelectorAll(".wgrp").forEach((e) => e.remove());
+    const first = box.firstElementChild;
+    groups.forEach((g) => {
+      const it = document.createElement("div");
+      it.className = "item wgrp";
+      it.appendChild(avatar(g.name, ""));
+      const w = document.createElement("div");
+      const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = g.name;
+      const sb = document.createElement("div"); sb.className = "sub"; sb.textContent = "গ্রুপ";
+      w.append(nm, sb); it.appendChild(w);
+      it.onclick = () => openRoom(g.id, g.name, null);
+      if (first) first.after(it); else box.appendChild(it);
+    });
+  }
+  new MutationObserver(() => {
+    if ($id("chatsList").querySelectorAll(".wgrp").length !== groups.length) renderGroups();
+  }).observe($id("chatsList"), { childList: true });
+  onAuthStateChanged(auth, (u) => {
+    if (gUnsub) { gUnsub(); gUnsub = null; }
+    groups = [];
+    if (!u) return;
+    gUnsub = onSnapshot(query(collection(db, "groups"), where("members", "array-contains", u.uid)), (snap) => {
+      groups = snap.docs.map((d) => ({ id: "grp_" + d.id, name: d.data().name || "Group" }));
+      renderGroups();
+    }, (err) => console.log("groups:", err.message));
+  });
+
+  // ---------- থ্রি ডট মেনু ----------
+  const menuBtn = $id("menuBtn");
+  const menu = document.createElement("div");
+  menu.style.cssText = "display:none;position:absolute;top:64px;right:6px;background:#fff;color:#111;border-radius:16px;box-shadow:0 4px 18px rgba(0,0,0,.3);z-index:50;width:min(78vw,340px);padding:6px 0";
+  roomEl.appendChild(menu);
+  function buildMenu() {
+    menu.innerHTML = "";
+    const items = [
+      ["New group", newGroup, true],
+      ["View contact", viewContact],
+      ["Search", searchBar],
+      ["Media, links, and docs", mediaPanel],
+      [isMuted() ? "Unmute notifications" : "Mute notifications", mutePanel],
+      ["Disappearing messages", disPanel],
+      ["Chat theme", themePanel, true],
+      ["More", morePanel, false, true]
+    ];
+    items.forEach(([label, fn, line, arrow]) => {
+      const d = document.createElement("div");
+      d.style.cssText = "padding:17px 22px;font-size:17px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" + (line ? ";border-bottom:1px solid #e6e6e6" : "");
+      d.innerHTML = "<span>" + label + "</span>" + (arrow ? "<span style='font-size:12px;color:#555'>▶</span>" : "");
+      d.onclick = () => { menu.style.display = "none"; fn(); };
+      menu.appendChild(d);
+    });
+  }
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (menu.style.display === "block") { menu.style.display = "none"; return; }
+    buildMenu(); menu.style.display = "block";
+  });
+  document.addEventListener("click", () => {
+    menu.style.display = "none";
+    const ep = $id("wEmoji"); if (ep) ep.remove();
+  });
+
+  // ---------- কিবোর্ড বারের আইকন ----------
+  // স্টিকার/ইমোজি
+  const stick = document.querySelector("#form .pill > svg.pi");
+  if (stick) stick.addEventListener("click", (e) => {
+    e.stopPropagation();
+    let ep = $id("wEmoji");
+    if (ep) { ep.remove(); return; }
+    ep = document.createElement("div");
+    ep.id = "wEmoji";
+    ep.style.cssText = "position:absolute;left:8px;right:8px;bottom:70px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.3);padding:10px;display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:210px;overflow-y:auto;z-index:40;font-size:26px;text-align:center";
+    ep.onclick = (ev) => ev.stopPropagation();
+    Array.from("😀😁😂🤣😊😍😘😎🤔😢😭😡👍👎🙏👏💪🔥💖💙💔🎉🎂🌹✨😴🤗😇🥰😜🤩😅😉😋🙄😬🤝👋🙌👌🤞😱🥺😤🤪🥳🤯").forEach((ch) => {
+      const s = document.createElement("span");
+      s.textContent = ch; s.style.cursor = "pointer";
+      s.onclick = () => { txt.value += ch; txt.dispatchEvent(new Event("input")); };
+      ep.appendChild(s);
+    });
+    roomEl.appendChild(ep);
+  });
+
+  // ক্যামেরা: ছবি তুলে সরাসরি পাঠানো
+  const labs = document.querySelectorAll("#form label.pi");
+  if (labs[1]) {
+    const cam = document.createElement("input");
+    cam.type = "file"; cam.accept = "image/*"; cam.setAttribute("capture", "environment");
+    cam.id = "camFile"; cam.className = "hide";
+    labs[1].after(cam);
+    labs[1].setAttribute("for", "camFile");
+    cam.onchange = () => {
+      if (!cam.files[0]) return;
+      const dt = new DataTransfer(); dt.items.add(cam.files[0]);
+      const mf = $id("mediaFile"); mf.files = dt.files;
+      mf.dispatchEvent(new Event("change"));
+      cam.value = "";
+    };
+  }
+
+  // ₹ : UPI অ্যাপ খোলা
+  const rup = document.querySelector("#form .rup");
+  if (rup) rup.addEventListener("click", () => {
+    const upi = prompt("প্রাপকের UPI ID লেখো (যেমন name@upi)");
+    if (!upi) return;
+    const am = prompt("কত টাকা?");
+    if (!am || isNaN(am)) return;
+    location.href = "upi://pay?pa=" + encodeURIComponent(upi.trim()) + "&pn=" + encodeURIComponent(($id("roomName").textContent || "").trim()) + "&am=" + encodeURIComponent(am) + "&cu=INR";
+  });
+})();
+  </script>
 </body>
 </html>
