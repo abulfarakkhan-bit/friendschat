@@ -118,6 +118,20 @@ header button,.ibtn{color:#111!important}
 #header button svg{display:block}
 #room header{align-items:center}
 .bar #sendBtn.hide{display:none!important}
+/* ===== WhatsApp চ্যাট লুক ===== */
+#room header{background:#fff!important;color:#111!important;padding:8px 8px!important;gap:4px;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+#room header .title{color:#111!important;font-size:19px!important}
+#room header button{color:#111!important;font-size:26px!important}
+#room header svg{fill:#111;display:block}
+#roomStatus{color:#667781;font-size:12px!important}
+
+#form{background:transparent!important;padding:6px 8px 8px!important;gap:8px;align-items:center}
+.bar .pill{flex:1;min-width:0;display:flex;align-items:center;gap:14px;background:#fff;border-radius:30px;padding:0 16px;height:50px;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.bar .pill input[type=text]{flex:1;min-width:0;background:transparent;border:none;outline:none;padding:0;font-size:17px}
+.bar .pill .pi{display:flex;width:24px;height:24px;padding:0;flex-shrink:0;cursor:pointer}
+.rup{width:22px;height:22px;border:2px solid #5f6b73;border-radius:50%;color:#5f6b73;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bar #micBtn,.bar #sendBtn{width:50px;height:50px;border-radius:50%;background:#1fa855!important;border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.3);flex-shrink:0}
+.bar #micBtn.hide,.bar #sendBtn.hide{display:none!important}
 </style>
 </head>
 <body>
@@ -181,12 +195,15 @@ header button,.ibtn{color:#111!important}
   
     <form class="bar" id="form">
   <div class="pill">
-    <label for="mediaFile" class="pic"><svg viewBox="0 0 24 24" width="24" height="24" fill="#667"><path d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6z"/></svg></label>
-    <input type="file" id="mediaFile" accept="image/*,video/*" class="hide">
+    <svg class="pi" viewBox="0 0 24 24" fill="none" stroke="#5f6b73" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#5f6b73"/><circle cx="15" cy="10" r="1" fill="#5f6b73"/><path d="M8 14.5c1 1.5 2.3 2.2 4 2.2s3-.7 4-2.2"/></svg>
     <input type="text" id="txt" placeholder="Message" autocomplete="off">
+    <label for="mediaFile" class="pi"><svg width="24" height="24" viewBox="0 0 24 24" fill="#5f6b73"><path d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6z"/></svg></label>
+    <span class="rup">₹</span>
+    <label for="mediaFile" class="pi"><svg width="24" height="24" viewBox="0 0 24 24" fill="#5f6b73"><path d="M9 2 7.2 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.2L15 2zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg></label>
+    <input type="file" id="mediaFile" accept="image/*,video/*" class="hide">
   </div>
-  <button type="button" id="micBtn"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7z"/></svg></button>
-  <button type="submit" id="sendBtn" class="hide"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
+  <button type="button" id="micBtn"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7z"/></svg></button>
+  <button type="submit" id="sendBtn" class="hide"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
     </form>
 </div>
 
@@ -258,25 +275,31 @@ txtEl.addEventListener("input", syncBtns);
 setInterval(syncBtns, 250);
 syncBtns();
 
-// ===== থ্রি ডট মেনু =====
+// ===== থ্রি ডট মেনু (WhatsApp স্টাইল) =====
 const menuBtn = document.getElementById("menuBtn");
 const roomEl = document.getElementById("room");
 const menu = document.createElement("div");
-menu.style.cssText = "display:none;position:absolute;top:58px;right:10px;background:#fff;color:#111;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:50;min-width:210px;overflow:hidden";
-const options = [
-  ["👤 প্রোফাইল দেখো", () => document.getElementById("roomHeader").click()],
-  ["🔍 চ্যাটে খোঁজো", () => {
-    const q = prompt("কী খুঁজবে? (সব দেখতে খালি রেখে OK চাপো)") || "";
+menu.style.cssText = "display:none;position:absolute;top:64px;right:6px;background:#fff;color:#111;border-radius:16px;box-shadow:0 4px 18px rgba(0,0,0,.3);z-index:50;width:min(78vw,340px);padding:6px 0";
+const soon = () => alert("এই ফিচার শীঘ্রই আসছে");
+const items = [
+  ["New group", soon, true],
+  ["View contact", () => document.getElementById("roomHeader").click()],
+  ["Search", () => {
+    const q = prompt("Search") || "";
     document.querySelectorAll("#msgs .msg").forEach((m) => {
       m.style.display = m.textContent.toLowerCase().includes(q.toLowerCase()) ? "" : "none";
     });
   }],
-  ["🧹 স্ক্রিন পরিষ্কার করো", () => { document.getElementById("msgs").innerHTML = ""; }]
+  ["Media, links, and docs", soon],
+  ["Mute notifications", soon],
+  ["Disappearing messages", soon],
+  ["Chat theme", soon, true],
+  ["More", soon, false, true]
 ];
-options.forEach(([label, fn]) => {
+items.forEach(([label, fn, line, arrow]) => {
   const d = document.createElement("div");
-  d.textContent = label;
-  d.style.cssText = "padding:14px 18px;font-size:16px;cursor:pointer;border-bottom:1px solid #f0f0f0";
+  d.style.cssText = "padding:17px 22px;font-size:17px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" + (line ? ";border-bottom:1px solid #e6e6e6" : "");
+  d.innerHTML = "<span>" + label + "</span>" + (arrow ? "<span style='font-size:12px;color:#555'>▶</span>" : "");
   d.onclick = () => { menu.style.display = "none"; fn(); };
   menu.appendChild(d);
 });
