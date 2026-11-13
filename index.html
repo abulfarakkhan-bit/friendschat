@@ -279,390 +279,7 @@ txtEl.addEventListener("input", syncBtns);
 setInterval(syncBtns, 250);
 syncBtns();
 
-// ===== সব ফিচার: থ্রি ডট মেনু + কিবোর্ড বার =====
-(function () {
-  const $id = (x) => document.getElementById(x);
-  const roomEl = $id("room"), msgs = $id("msgs"), txt = $id("txt");
-  const LS = {
-    get: (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  };
-  const rid = () => currentRoom || "none";
-  const ROW = "padding:16px 6px;font-size:17px;border-bottom:1px solid #eee;cursor:pointer;display:flex;align-items:center;gap:12px";
 
-  function toast(m) {
-    const t = document.createElement("div");
-    t.textContent = m;
-    t.style.cssText = "position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:20px;z-index:80;font-size:15px;text-align:center";
-    roomEl.appendChild(t);
-    setTimeout(() => t.remove(), 2600);
-  }
-
-  function panel(title, build) {
-    const old = $id("wPanel"); if (old) old.remove();
-    const p = document.createElement("div");
-    p.id = "wPanel";
-    p.style.cssText = "position:absolute;inset:0;background:#fff;z-index:60;display:flex;flex-direction:column";
-    const h = document.createElement("div");
-    h.style.cssText = "display:flex;align-items:center;gap:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.2);font-size:19px;font-weight:bold";
-    const b = document.createElement("span");
-    b.textContent = "←"; b.style.cssText = "font-size:26px;cursor:pointer"; b.onclick = () => p.remove();
-    const t = document.createElement("span"); t.textContent = title;
-    h.append(b, t);
-    const body = document.createElement("div");
-    body.style.cssText = "flex:1;overflow-y:auto;padding:14px 16px";
-    p.append(h, body);
-    roomEl.appendChild(p);
-    build(body, p);
-  }
-
-  function choose(title, opts, cur, onPick) {
-    panel(title, (body, p) => {
-      opts.forEach(([label, val]) => {
-        const r = document.createElement("div");
-        r.style.cssText = ROW;
-        r.innerHTML = '<span style="width:20px;height:20px;border-radius:50%;border:2px solid #1fa855;display:inline-block;background:' + (val === cur ? '#1fa855' : '#fff') + '"></span><span>' + label + '</span>';
-        r.onclick = () => { p.remove(); onPick(val); };
-        body.appendChild(r);
-      });
-    });
-  }
-
-  function listPanel(title, rows) {
-    panel(title, (body, p) => {
-      rows.forEach(([label, fn]) => {
-        const r = document.createElement("div");
-        r.style.cssText = ROW; r.textContent = label;
-        r.onclick = () => { p.remove(); fn(); };
-        body.appendChild(r);
-      });
-    });
-  }
-
-  // ---------- রুমের অবস্থা (থিম, ব্লক, ক্লিয়ার, ডিসঅ্যাপিয়ারিং) ----------
-  const blocked = () => !!LS.get("block_" + rid(), false);
-  const isMuted = () => { const v = LS.get("mute_" + rid(), 0); return v === -1 || v > Date.now(); };
-
-  function applyRoomState() {
-    const r = rid();
-    const c = LS.get("theme_" + r, "");
-    roomEl.style.background = c;
-    const ty = $id("typing"); if (ty) ty.style.background = c;
-    msgs.classList.toggle("wBlocked", blocked());
-    const all = Array.from(msgs.querySelectorAll(".msg"));
-    const clr = LS.get("clear_" + r, 0);
-    const dis = LS.get("dis_" + r, { h: 0, seen: [] });
-    for (let i = dis.seen.length; i < all.length; i++) dis.seen.push(Date.now());
-    LS.set("dis_" + r, dis);
-    all.forEach((m, i) => {
-      const gone = i < clr || (dis.h > 0 && Date.now() - dis.seen[i] > dis.h * 3600000);
-      m.classList.toggle("wGone", gone);
-    });
-  }
-  setInterval(applyRoomState, 60000);
-
-  // নতুন মেসেজ এলে বিপ শব্দ (মিউট থাকলে হবে না)
-  function beep() {
-    try {
-      const a = new (window.AudioContext || window.webkitAudioContext)();
-      const o = a.createOscillator(), g = a.createGain();
-      o.connect(g); g.connect(a.destination);
-      o.frequency.value = 880; g.gain.value = 0.1;
-      o.start(); o.stop(a.currentTime + 0.15);
-    } catch (e) {}
-  }
-  let lastRoom = null, lastCount = 0;
-  new MutationObserver(() => {
-    applyRoomState();
-    const all = msgs.querySelectorAll(".msg"), n = all.length;
-    if (currentRoom !== lastRoom) { lastRoom = currentRoom; lastCount = n; return; }
-    if (n > lastCount && lastCount > 0) {
-      const l = all[n - 1];
-      if (l && !l.classList.contains("me") && !isMuted() && !blocked()) beep();
-    }
-    lastCount = n;
-  }).observe(msgs, { childList: true });
-
-  // ব্লক করলে মেসেজ পাঠানো বন্ধ
-  $id("form").addEventListener("submit", (e) => {
-    if (blocked()) { e.preventDefault(); e.stopImmediatePropagation(); toast("মেসেজ পাঠাতে আগে Unblock করো"); }
-  }, true);
-
-  // ---------- মেনুর অপশন ----------
-  function viewContact() {
-    if (otherUid) $id("roomHeader").click(); else toast("এটা গ্রুপ চ্যাট");
-  }
-
-  function searchBar() {
-    let bar = $id("wSearch");
-    if (bar) bar.remove();
-    bar = document.createElement("div");
-    bar.id = "wSearch";
-    bar.style.cssText = "display:flex;gap:8px;padding:8px 12px;background:#fff;align-items:center";
-    const inp = document.createElement("input");
-    inp.placeholder = "Search...";
-    inp.style.cssText = "flex:1;padding:10px 14px;border:none;border-radius:20px;background:#f0f2f5;font-size:16px;outline:none";
-    const x = document.createElement("span");
-    x.textContent = "✖"; x.style.cssText = "font-size:20px;cursor:pointer;padding:4px 8px";
-    const show = (q) => msgs.querySelectorAll(".msg").forEach((m) => { m.style.display = m.textContent.toLowerCase().includes(q) ? "" : "none"; });
-    inp.oninput = () => show(inp.value.toLowerCase());
-    x.onclick = () => { bar.remove(); show(""); };
-    bar.append(inp, x);
-    roomEl.insertBefore(bar, msgs);
-    inp.focus();
-  }
-
-  function mediaPanel() {
-    panel("Media, links, and docs", (body) => {
-      const media = Array.from(msgs.querySelectorAll(".msg img, .msg video"));
-      const h1 = document.createElement("div");
-      h1.textContent = "Media (" + media.length + ")";
-      h1.style.cssText = "font-weight:bold;color:#075e54;margin:6px 0 10px";
-      const grid = document.createElement("div");
-      grid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:4px";
-      media.forEach((el) => {
-        const c = el.cloneNode(true);
-        if (c.tagName === "VIDEO") c.controls = true;
-        c.style.cssText = "width:100%;height:110px;object-fit:cover;border-radius:4px";
-        grid.appendChild(c);
-      });
-      const links = [];
-      msgs.querySelectorAll(".msg").forEach((m) => {
-        const c = m.cloneNode(true);
-        c.querySelectorAll(".t,.n,.react,.reply").forEach((e) => e.remove());
-        (c.textContent.match(/https?:\/\/\S+/g) || []).forEach((l) => links.push(l));
-      });
-      const h2 = document.createElement("div");
-      h2.textContent = "Links (" + links.length + ")";
-      h2.style.cssText = "font-weight:bold;color:#075e54;margin:18px 0 10px";
-      body.append(h1, grid, h2);
-      links.forEach((l) => {
-        const a = document.createElement("a");
-        a.href = l; a.textContent = l; a.target = "_blank";
-        a.style.cssText = "display:block;padding:10px 0;border-bottom:1px solid #eee;color:#1877f2;word-break:break-all";
-        body.appendChild(a);
-      });
-    });
-  }
-
-  function mutePanel() {
-    if (isMuted()) { LS.set("mute_" + rid(), 0); toast("Notifications চালু হলো"); return; }
-    choose("Mute notifications", [["8 hours", 8], ["1 week", 168], ["Always", -1]], null, (h) => {
-      LS.set("mute_" + rid(), h === -1 ? -1 : Date.now() + h * 3600000);
-      toast("Muted");
-    });
-  }
-
-  function disPanel() {
-    const dis = LS.get("dis_" + rid(), { h: 0, seen: [] });
-    choose("Disappearing messages", [["24 hours", 24], ["7 days", 168], ["Off", 0]], dis.h, (h) => {
-      const d = LS.get("dis_" + rid(), { h: 0, seen: [] });
-      d.h = h; LS.set("dis_" + rid(), d);
-      applyRoomState();
-      toast(h ? "এখন থেকে মেসেজ " + (h === 24 ? "২৪ ঘণ্টা" : "৭ দিন") + " পর লুকাবে" : "Off করা হলো");
-    });
-  }
-
-  function themePanel() {
-    const cols = [["Default", ""], ["Green", "#d9fdd3"], ["Blue", "#dbe9f6"], ["Pink", "#fbe4ee"], ["Yellow", "#fff6cc"], ["Dark", "#0b141a"]];
-    panel("Chat theme", (body, p) => {
-      const g = document.createElement("div");
-      g.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:10px";
-      cols.forEach(([n, c]) => {
-        const s = document.createElement("div");
-        s.textContent = n;
-        s.style.cssText = "height:90px;border-radius:12px;border:2px solid #ccc;display:flex;align-items:flex-end;justify-content:center;padding:6px;font-size:14px;cursor:pointer;background:" + (c || "#efeae2") + (c === "#0b141a" ? ";color:#fff" : "");
-        s.onclick = () => { LS.set("theme_" + rid(), c); applyRoomState(); p.remove(); };
-        g.appendChild(s);
-      });
-      body.appendChild(g);
-    });
-  }
-
-  function exportChat() {
-    const lines = [];
-    msgs.querySelectorAll(".msg").forEach((m) => {
-      if (m.classList.contains("wGone")) return;
-      const c = m.cloneNode(true);
-      const who = m.classList.contains("me") ? "Me" : ((m.querySelector(".n") || {}).textContent || "");
-      const tm = (m.querySelector(".t") || {}).textContent || "";
-      c.querySelectorAll(".n,.t,.react,.reply").forEach((e) => e.remove());
-      lines.push("[" + tm + "] " + who + ": " + (c.querySelector("img,video") ? "[media] " : "") + c.textContent.trim());
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain" }));
-    a.download = "chat.txt";
-    document.body.appendChild(a); a.click(); a.remove();
-  }
-
-  function morePanel() {
-    listPanel("More", [
-      [blocked() ? "Unblock" : "Block", () => {
-        LS.set("block_" + rid(), !blocked()); applyRoomState();
-        toast(blocked() ? "Blocked" : "Unblocked");
-      }],
-      ["Clear chat", () => {
-        if (!confirm("এই চ্যাটের সব মেসেজ তোমার ফোন থেকে মুছবে?")) return;
-        LS.set("clear_" + rid(), msgs.querySelectorAll(".msg").length);
-        applyRoomState(); toast("Chat cleared");
-      }],
-      ["Export chat", exportChat]
-    ]);
-  }
-
-  // ---------- New group ----------
-  function newGroup() {
-    if (!me) return;
-    panel("New group", (body, p) => {
-      const name = document.createElement("input");
-      name.placeholder = "গ্রুপের নাম"; name.maxLength = 40;
-      name.style.cssText = "width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px;margin-bottom:12px";
-      const list = document.createElement("div");
-      const btn = document.createElement("button");
-      btn.textContent = "গ্রুপ বানাও";
-      btn.style.cssText = "width:100%;padding:14px;margin-top:16px;background:#1fa855;color:#fff;border:none;border-radius:8px;font-size:17px";
-      body.append(name, list, btn);
-      const picked = new Set();
-      getDocs(collection(db, "users")).then((snap) => {
-        snap.forEach((d) => {
-          const u = d.data();
-          if (u.uid === me.uid) return;
-          const r = document.createElement("label");
-          r.style.cssText = "display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eee;font-size:17px";
-          const cb = document.createElement("input");
-          cb.type = "checkbox"; cb.style.cssText = "width:20px;height:20px";
-          cb.onchange = () => { cb.checked ? picked.add(u.uid) : picked.delete(u.uid); };
-          const s = document.createElement("span"); s.textContent = u.name || "বন্ধু";
-          r.append(cb, s); list.appendChild(r);
-        });
-      }).catch((e) => { list.textContent = "লোড হয়নি: " + e.message; });
-      btn.onclick = async () => {
-        const nm = name.value.trim();
-        if (!nm) { toast("নাম লেখো"); return; }
-        if (!picked.size) { toast("অন্তত একজনকে বাছাই করো"); return; }
-        try {
-          const ref = await addDoc(collection(db, "groups"), { name: nm, members: [me.uid, ...picked], createdBy: me.uid, createdAt: serverTimestamp() });
-          p.remove();
-          openRoom("grp_" + ref.id, nm, null);
-        } catch (e) {
-          alert("গ্রুপ বানানো যায়নি: " + e.message + "\n(Firebase Rules-এ groups কালেকশন অনুমোদন দিতে হবে)");
-        }
-      };
-    });
-  }
-
-  let groups = [], gUnsub = null;
-  function renderGroups() {
-    const box = $id("chatsList");
-    box.querySelectorAll(".wgrp").forEach((e) => e.remove());
-    const first = box.firstElementChild;
-    groups.forEach((g) => {
-      const it = document.createElement("div");
-      it.className = "item wgrp";
-      it.appendChild(avatar(g.name, ""));
-      const w = document.createElement("div");
-      const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = g.name;
-      const sb = document.createElement("div"); sb.className = "sub"; sb.textContent = "গ্রুপ";
-      w.append(nm, sb); it.appendChild(w);
-      it.onclick = () => openRoom(g.id, g.name, null);
-      if (first) first.after(it); else box.appendChild(it);
-    });
-  }
-  new MutationObserver(() => {
-    if ($id("chatsList").querySelectorAll(".wgrp").length !== groups.length) renderGroups();
-  }).observe($id("chatsList"), { childList: true });
-  onAuthStateChanged(auth, (u) => {
-    if (gUnsub) { gUnsub(); gUnsub = null; }
-    groups = [];
-    if (!u) return;
-    gUnsub = onSnapshot(query(collection(db, "groups"), where("members", "array-contains", u.uid)), (snap) => {
-      groups = snap.docs.map((d) => ({ id: "grp_" + d.id, name: d.data().name || "Group" }));
-      renderGroups();
-    }, (err) => console.log("groups:", err.message));
-  });
-
-  // ---------- থ্রি ডট মেনু ----------
-  const menuBtn = $id("menuBtn");
-  const menu = document.createElement("div");
-  menu.style.cssText = "display:none;position:absolute;top:64px;right:6px;background:#fff;color:#111;border-radius:16px;box-shadow:0 4px 18px rgba(0,0,0,.3);z-index:50;width:min(78vw,340px);padding:6px 0";
-  roomEl.appendChild(menu);
-  function buildMenu() {
-    menu.innerHTML = "";
-    const items = [
-      ["New group", newGroup, true],
-      ["View contact", viewContact],
-      ["Search", searchBar],
-      ["Media, links, and docs", mediaPanel],
-      [isMuted() ? "Unmute notifications" : "Mute notifications", mutePanel],
-      ["Disappearing messages", disPanel],
-      ["Chat theme", themePanel, true],
-      ["More", morePanel, false, true]
-    ];
-    items.forEach(([label, fn, line, arrow]) => {
-      const d = document.createElement("div");
-      d.style.cssText = "padding:17px 22px;font-size:17px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" + (line ? ";border-bottom:1px solid #e6e6e6" : "");
-      d.innerHTML = "<span>" + label + "</span>" + (arrow ? "<span style='font-size:12px;color:#555'>▶</span>" : "");
-      d.onclick = () => { menu.style.display = "none"; fn(); };
-      menu.appendChild(d);
-    });
-  }
-  menuBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (menu.style.display === "block") { menu.style.display = "none"; return; }
-    buildMenu(); menu.style.display = "block";
-  });
-  document.addEventListener("click", () => {
-    menu.style.display = "none";
-    const ep = $id("wEmoji"); if (ep) ep.remove();
-  });
-
-  // ---------- কিবোর্ড বারের আইকন ----------
-  // স্টিকার/ইমোজি
-  const stick = document.querySelector("#form .pill > svg.pi");
-  if (stick) stick.addEventListener("click", (e) => {
-    e.stopPropagation();
-    let ep = $id("wEmoji");
-    if (ep) { ep.remove(); return; }
-    ep = document.createElement("div");
-    ep.id = "wEmoji";
-    ep.style.cssText = "position:absolute;left:8px;right:8px;bottom:70px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.3);padding:10px;display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:210px;overflow-y:auto;z-index:40;font-size:26px;text-align:center";
-    ep.onclick = (ev) => ev.stopPropagation();
-    Array.from("😀😁😂🤣😊😍😘😎🤔😢😭😡👍👎🙏👏💪🔥💖💙💔🎉🎂🌹✨😴🤗😇🥰😜🤩😅😉😋🙄😬🤝👋🙌👌🤞😱🥺😤🤪🥳🤯").forEach((ch) => {
-      const s = document.createElement("span");
-      s.textContent = ch; s.style.cursor = "pointer";
-      s.onclick = () => { txt.value += ch; txt.dispatchEvent(new Event("input")); };
-      ep.appendChild(s);
-    });
-    roomEl.appendChild(ep);
-  });
-
-  // ক্যামেরা: ছবি তুলে সরাসরি পাঠানো
-  const labs = document.querySelectorAll("#form label.pi");
-  if (labs[1]) {
-    const cam = document.createElement("input");
-    cam.type = "file"; cam.accept = "image/*"; cam.setAttribute("capture", "environment");
-    cam.id = "camFile"; cam.className = "hide";
-    labs[1].after(cam);
-    labs[1].setAttribute("for", "camFile");
-    cam.onchange = () => {
-      if (!cam.files[0]) return;
-      const dt = new DataTransfer(); dt.items.add(cam.files[0]);
-      const mf = $id("mediaFile"); mf.files = dt.files;
-      mf.dispatchEvent(new Event("change"));
-      cam.value = "";
-    };
-  }
-
-  // ₹ : UPI অ্যাপ খোলা
-  const rup = document.querySelector("#form .rup");
-  if (rup) rup.addEventListener("click", () => {
-    const upi = prompt("প্রাপকের UPI ID লেখো (যেমন name@upi)");
-    if (!upi) return;
-    const am = prompt("কত টাকা?");
-    if (!am || isNaN(am)) return;
-    location.href = "upi://pay?pa=" + encodeURIComponent(upi.trim()) + "&pn=" + encodeURIComponent(($id("roomName").textContent || "").trim()) + "&am=" + encodeURIComponent(am) + "&cu=INR";
-  });
-})();
 </script>
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1510,6 +1127,390 @@ function watchStatus(uid) {
   statusTimer = setInterval(refresh, 15000);
 }
 $("back").addEventListener("click", () => clearInterval(statusTimer));
+  // ===== সব ফিচার: থ্রি ডট মেনু + কিবোর্ড বার =====
+(function () {
+  const $id = (x) => document.getElementById(x);
+  const roomEl = $id("room"), msgs = $id("msgs"), txt = $id("txt");
+  const LS = {
+    get: (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const rid = () => currentRoom || "none";
+  const ROW = "padding:16px 6px;font-size:17px;border-bottom:1px solid #eee;cursor:pointer;display:flex;align-items:center;gap:12px";
+
+  function toast(m) {
+    const t = document.createElement("div");
+    t.textContent = m;
+    t.style.cssText = "position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:20px;z-index:80;font-size:15px;text-align:center";
+    roomEl.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+  }
+
+  function panel(title, build) {
+    const old = $id("wPanel"); if (old) old.remove();
+    const p = document.createElement("div");
+    p.id = "wPanel";
+    p.style.cssText = "position:absolute;inset:0;background:#fff;z-index:60;display:flex;flex-direction:column";
+    const h = document.createElement("div");
+    h.style.cssText = "display:flex;align-items:center;gap:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.2);font-size:19px;font-weight:bold";
+    const b = document.createElement("span");
+    b.textContent = "←"; b.style.cssText = "font-size:26px;cursor:pointer"; b.onclick = () => p.remove();
+    const t = document.createElement("span"); t.textContent = title;
+    h.append(b, t);
+    const body = document.createElement("div");
+    body.style.cssText = "flex:1;overflow-y:auto;padding:14px 16px";
+    p.append(h, body);
+    roomEl.appendChild(p);
+    build(body, p);
+  }
+
+  function choose(title, opts, cur, onPick) {
+    panel(title, (body, p) => {
+      opts.forEach(([label, val]) => {
+        const r = document.createElement("div");
+        r.style.cssText = ROW;
+        r.innerHTML = '<span style="width:20px;height:20px;border-radius:50%;border:2px solid #1fa855;display:inline-block;background:' + (val === cur ? '#1fa855' : '#fff') + '"></span><span>' + label + '</span>';
+        r.onclick = () => { p.remove(); onPick(val); };
+        body.appendChild(r);
+      });
+    });
+  }
+
+  function listPanel(title, rows) {
+    panel(title, (body, p) => {
+      rows.forEach(([label, fn]) => {
+        const r = document.createElement("div");
+        r.style.cssText = ROW; r.textContent = label;
+        r.onclick = () => { p.remove(); fn(); };
+        body.appendChild(r);
+      });
+    });
+  }
+
+  // ---------- রুমের অবস্থা (থিম, ব্লক, ক্লিয়ার, ডিসঅ্যাপিয়ারিং) ----------
+  const blocked = () => !!LS.get("block_" + rid(), false);
+  const isMuted = () => { const v = LS.get("mute_" + rid(), 0); return v === -1 || v > Date.now(); };
+
+  function applyRoomState() {
+    const r = rid();
+    const c = LS.get("theme_" + r, "");
+    roomEl.style.background = c;
+    const ty = $id("typing"); if (ty) ty.style.background = c;
+    msgs.classList.toggle("wBlocked", blocked());
+    const all = Array.from(msgs.querySelectorAll(".msg"));
+    const clr = LS.get("clear_" + r, 0);
+    const dis = LS.get("dis_" + r, { h: 0, seen: [] });
+    for (let i = dis.seen.length; i < all.length; i++) dis.seen.push(Date.now());
+    LS.set("dis_" + r, dis);
+    all.forEach((m, i) => {
+      const gone = i < clr || (dis.h > 0 && Date.now() - dis.seen[i] > dis.h * 3600000);
+      m.classList.toggle("wGone", gone);
+    });
+  }
+  setInterval(applyRoomState, 60000);
+
+  // নতুন মেসেজ এলে বিপ শব্দ (মিউট থাকলে হবে না)
+  function beep() {
+    try {
+      const a = new (window.AudioContext || window.webkitAudioContext)();
+      const o = a.createOscillator(), g = a.createGain();
+      o.connect(g); g.connect(a.destination);
+      o.frequency.value = 880; g.gain.value = 0.1;
+      o.start(); o.stop(a.currentTime + 0.15);
+    } catch (e) {}
+  }
+  let lastRoom = null, lastCount = 0;
+  new MutationObserver(() => {
+    applyRoomState();
+    const all = msgs.querySelectorAll(".msg"), n = all.length;
+    if (currentRoom !== lastRoom) { lastRoom = currentRoom; lastCount = n; return; }
+    if (n > lastCount && lastCount > 0) {
+      const l = all[n - 1];
+      if (l && !l.classList.contains("me") && !isMuted() && !blocked()) beep();
+    }
+    lastCount = n;
+  }).observe(msgs, { childList: true });
+
+  // ব্লক করলে মেসেজ পাঠানো বন্ধ
+  $id("form").addEventListener("submit", (e) => {
+    if (blocked()) { e.preventDefault(); e.stopImmediatePropagation(); toast("মেসেজ পাঠাতে আগে Unblock করো"); }
+  }, true);
+
+  // ---------- মেনুর অপশন ----------
+  function viewContact() {
+    if (otherUid) $id("roomHeader").click(); else toast("এটা গ্রুপ চ্যাট");
+  }
+
+  function searchBar() {
+    let bar = $id("wSearch");
+    if (bar) bar.remove();
+    bar = document.createElement("div");
+    bar.id = "wSearch";
+    bar.style.cssText = "display:flex;gap:8px;padding:8px 12px;background:#fff;align-items:center";
+    const inp = document.createElement("input");
+    inp.placeholder = "Search...";
+    inp.style.cssText = "flex:1;padding:10px 14px;border:none;border-radius:20px;background:#f0f2f5;font-size:16px;outline:none";
+    const x = document.createElement("span");
+    x.textContent = "✖"; x.style.cssText = "font-size:20px;cursor:pointer;padding:4px 8px";
+    const show = (q) => msgs.querySelectorAll(".msg").forEach((m) => { m.style.display = m.textContent.toLowerCase().includes(q) ? "" : "none"; });
+    inp.oninput = () => show(inp.value.toLowerCase());
+    x.onclick = () => { bar.remove(); show(""); };
+    bar.append(inp, x);
+    roomEl.insertBefore(bar, msgs);
+    inp.focus();
+  }
+
+  function mediaPanel() {
+    panel("Media, links, and docs", (body) => {
+      const media = Array.from(msgs.querySelectorAll(".msg img, .msg video"));
+      const h1 = document.createElement("div");
+      h1.textContent = "Media (" + media.length + ")";
+      h1.style.cssText = "font-weight:bold;color:#075e54;margin:6px 0 10px";
+      const grid = document.createElement("div");
+      grid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:4px";
+      media.forEach((el) => {
+        const c = el.cloneNode(true);
+        if (c.tagName === "VIDEO") c.controls = true;
+        c.style.cssText = "width:100%;height:110px;object-fit:cover;border-radius:4px";
+        grid.appendChild(c);
+      });
+      const links = [];
+      msgs.querySelectorAll(".msg").forEach((m) => {
+        const c = m.cloneNode(true);
+        c.querySelectorAll(".t,.n,.react,.reply").forEach((e) => e.remove());
+        (c.textContent.match(/https?:\/\/\S+/g) || []).forEach((l) => links.push(l));
+      });
+      const h2 = document.createElement("div");
+      h2.textContent = "Links (" + links.length + ")";
+      h2.style.cssText = "font-weight:bold;color:#075e54;margin:18px 0 10px";
+      body.append(h1, grid, h2);
+      links.forEach((l) => {
+        const a = document.createElement("a");
+        a.href = l; a.textContent = l; a.target = "_blank";
+        a.style.cssText = "display:block;padding:10px 0;border-bottom:1px solid #eee;color:#1877f2;word-break:break-all";
+        body.appendChild(a);
+      });
+    });
+  }
+
+  function mutePanel() {
+    if (isMuted()) { LS.set("mute_" + rid(), 0); toast("Notifications চালু হলো"); return; }
+    choose("Mute notifications", [["8 hours", 8], ["1 week", 168], ["Always", -1]], null, (h) => {
+      LS.set("mute_" + rid(), h === -1 ? -1 : Date.now() + h * 3600000);
+      toast("Muted");
+    });
+  }
+
+  function disPanel() {
+    const dis = LS.get("dis_" + rid(), { h: 0, seen: [] });
+    choose("Disappearing messages", [["24 hours", 24], ["7 days", 168], ["Off", 0]], dis.h, (h) => {
+      const d = LS.get("dis_" + rid(), { h: 0, seen: [] });
+      d.h = h; LS.set("dis_" + rid(), d);
+      applyRoomState();
+      toast(h ? "এখন থেকে মেসেজ " + (h === 24 ? "২৪ ঘণ্টা" : "৭ দিন") + " পর লুকাবে" : "Off করা হলো");
+    });
+  }
+
+  function themePanel() {
+    const cols = [["Default", ""], ["Green", "#d9fdd3"], ["Blue", "#dbe9f6"], ["Pink", "#fbe4ee"], ["Yellow", "#fff6cc"], ["Dark", "#0b141a"]];
+    panel("Chat theme", (body, p) => {
+      const g = document.createElement("div");
+      g.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:10px";
+      cols.forEach(([n, c]) => {
+        const s = document.createElement("div");
+        s.textContent = n;
+        s.style.cssText = "height:90px;border-radius:12px;border:2px solid #ccc;display:flex;align-items:flex-end;justify-content:center;padding:6px;font-size:14px;cursor:pointer;background:" + (c || "#efeae2") + (c === "#0b141a" ? ";color:#fff" : "");
+        s.onclick = () => { LS.set("theme_" + rid(), c); applyRoomState(); p.remove(); };
+        g.appendChild(s);
+      });
+      body.appendChild(g);
+    });
+  }
+
+  function exportChat() {
+    const lines = [];
+    msgs.querySelectorAll(".msg").forEach((m) => {
+      if (m.classList.contains("wGone")) return;
+      const c = m.cloneNode(true);
+      const who = m.classList.contains("me") ? "Me" : ((m.querySelector(".n") || {}).textContent || "");
+      const tm = (m.querySelector(".t") || {}).textContent || "";
+      c.querySelectorAll(".n,.t,.react,.reply").forEach((e) => e.remove());
+      lines.push("[" + tm + "] " + who + ": " + (c.querySelector("img,video") ? "[media] " : "") + c.textContent.trim());
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain" }));
+    a.download = "chat.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function morePanel() {
+    listPanel("More", [
+      [blocked() ? "Unblock" : "Block", () => {
+        LS.set("block_" + rid(), !blocked()); applyRoomState();
+        toast(blocked() ? "Blocked" : "Unblocked");
+      }],
+      ["Clear chat", () => {
+        if (!confirm("এই চ্যাটের সব মেসেজ তোমার ফোন থেকে মুছবে?")) return;
+        LS.set("clear_" + rid(), msgs.querySelectorAll(".msg").length);
+        applyRoomState(); toast("Chat cleared");
+      }],
+      ["Export chat", exportChat]
+    ]);
+  }
+
+  // ---------- New group ----------
+  function newGroup() {
+    if (!me) return;
+    panel("New group", (body, p) => {
+      const name = document.createElement("input");
+      name.placeholder = "গ্রুপের নাম"; name.maxLength = 40;
+      name.style.cssText = "width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px;margin-bottom:12px";
+      const list = document.createElement("div");
+      const btn = document.createElement("button");
+      btn.textContent = "গ্রুপ বানাও";
+      btn.style.cssText = "width:100%;padding:14px;margin-top:16px;background:#1fa855;color:#fff;border:none;border-radius:8px;font-size:17px";
+      body.append(name, list, btn);
+      const picked = new Set();
+      getDocs(collection(db, "users")).then((snap) => {
+        snap.forEach((d) => {
+          const u = d.data();
+          if (u.uid === me.uid) return;
+          const r = document.createElement("label");
+          r.style.cssText = "display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eee;font-size:17px";
+          const cb = document.createElement("input");
+          cb.type = "checkbox"; cb.style.cssText = "width:20px;height:20px";
+          cb.onchange = () => { cb.checked ? picked.add(u.uid) : picked.delete(u.uid); };
+          const s = document.createElement("span"); s.textContent = u.name || "বন্ধু";
+          r.append(cb, s); list.appendChild(r);
+        });
+      }).catch((e) => { list.textContent = "লোড হয়নি: " + e.message; });
+      btn.onclick = async () => {
+        const nm = name.value.trim();
+        if (!nm) { toast("নাম লেখো"); return; }
+        if (!picked.size) { toast("অন্তত একজনকে বাছাই করো"); return; }
+        try {
+          const ref = await addDoc(collection(db, "groups"), { name: nm, members: [me.uid, ...picked], createdBy: me.uid, createdAt: serverTimestamp() });
+          p.remove();
+          openRoom("grp_" + ref.id, nm, null);
+        } catch (e) {
+          alert("গ্রুপ বানানো যায়নি: " + e.message + "\n(Firebase Rules-এ groups কালেকশন অনুমোদন দিতে হবে)");
+        }
+      };
+    });
+  }
+
+  let groups = [], gUnsub = null;
+  function renderGroups() {
+    const box = $id("chatsList");
+    box.querySelectorAll(".wgrp").forEach((e) => e.remove());
+    const first = box.firstElementChild;
+    groups.forEach((g) => {
+      const it = document.createElement("div");
+      it.className = "item wgrp";
+      it.appendChild(avatar(g.name, ""));
+      const w = document.createElement("div");
+      const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = g.name;
+      const sb = document.createElement("div"); sb.className = "sub"; sb.textContent = "গ্রুপ";
+      w.append(nm, sb); it.appendChild(w);
+      it.onclick = () => openRoom(g.id, g.name, null);
+      if (first) first.after(it); else box.appendChild(it);
+    });
+  }
+  new MutationObserver(() => {
+    if ($id("chatsList").querySelectorAll(".wgrp").length !== groups.length) renderGroups();
+  }).observe($id("chatsList"), { childList: true });
+  onAuthStateChanged(auth, (u) => {
+    if (gUnsub) { gUnsub(); gUnsub = null; }
+    groups = [];
+    if (!u) return;
+    gUnsub = onSnapshot(query(collection(db, "groups"), where("members", "array-contains", u.uid)), (snap) => {
+      groups = snap.docs.map((d) => ({ id: "grp_" + d.id, name: d.data().name || "Group" }));
+      renderGroups();
+    }, (err) => console.log("groups:", err.message));
+  });
+
+  // ---------- থ্রি ডট মেনু ----------
+  const menuBtn = $id("menuBtn");
+  const menu = document.createElement("div");
+  menu.style.cssText = "display:none;position:absolute;top:64px;right:6px;background:#fff;color:#111;border-radius:16px;box-shadow:0 4px 18px rgba(0,0,0,.3);z-index:50;width:min(78vw,340px);padding:6px 0";
+  roomEl.appendChild(menu);
+  function buildMenu() {
+    menu.innerHTML = "";
+    const items = [
+      ["New group", newGroup, true],
+      ["View contact", viewContact],
+      ["Search", searchBar],
+      ["Media, links, and docs", mediaPanel],
+      [isMuted() ? "Unmute notifications" : "Mute notifications", mutePanel],
+      ["Disappearing messages", disPanel],
+      ["Chat theme", themePanel, true],
+      ["More", morePanel, false, true]
+    ];
+    items.forEach(([label, fn, line, arrow]) => {
+      const d = document.createElement("div");
+      d.style.cssText = "padding:17px 22px;font-size:17px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" + (line ? ";border-bottom:1px solid #e6e6e6" : "");
+      d.innerHTML = "<span>" + label + "</span>" + (arrow ? "<span style='font-size:12px;color:#555'>▶</span>" : "");
+      d.onclick = () => { menu.style.display = "none"; fn(); };
+      menu.appendChild(d);
+    });
+  }
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (menu.style.display === "block") { menu.style.display = "none"; return; }
+    buildMenu(); menu.style.display = "block";
+  });
+  document.addEventListener("click", () => {
+    menu.style.display = "none";
+    const ep = $id("wEmoji"); if (ep) ep.remove();
+  });
+
+  // ---------- কিবোর্ড বারের আইকন ----------
+  // স্টিকার/ইমোজি
+  const stick = document.querySelector("#form .pill > svg.pi");
+  if (stick) stick.addEventListener("click", (e) => {
+    e.stopPropagation();
+    let ep = $id("wEmoji");
+    if (ep) { ep.remove(); return; }
+    ep = document.createElement("div");
+    ep.id = "wEmoji";
+    ep.style.cssText = "position:absolute;left:8px;right:8px;bottom:70px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.3);padding:10px;display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:210px;overflow-y:auto;z-index:40;font-size:26px;text-align:center";
+    ep.onclick = (ev) => ev.stopPropagation();
+    Array.from("😀😁😂🤣😊😍😘😎🤔😢😭😡👍👎🙏👏💪🔥💖💙💔🎉🎂🌹✨😴🤗😇🥰😜🤩😅😉😋🙄😬🤝👋🙌👌🤞😱🥺😤🤪🥳🤯").forEach((ch) => {
+      const s = document.createElement("span");
+      s.textContent = ch; s.style.cursor = "pointer";
+      s.onclick = () => { txt.value += ch; txt.dispatchEvent(new Event("input")); };
+      ep.appendChild(s);
+    });
+    roomEl.appendChild(ep);
+  });
+
+  // ক্যামেরা: ছবি তুলে সরাসরি পাঠানো
+  const labs = document.querySelectorAll("#form label.pi");
+  if (labs[1]) {
+    const cam = document.createElement("input");
+    cam.type = "file"; cam.accept = "image/*"; cam.setAttribute("capture", "environment");
+    cam.id = "camFile"; cam.className = "hide";
+    labs[1].after(cam);
+    labs[1].setAttribute("for", "camFile");
+    cam.onchange = () => {
+      if (!cam.files[0]) return;
+      const dt = new DataTransfer(); dt.items.add(cam.files[0]);
+      const mf = $id("mediaFile"); mf.files = dt.files;
+      mf.dispatchEvent(new Event("change"));
+      cam.value = "";
+    };
+  }
+
+  // ₹ : UPI অ্যাপ খোলা
+  const rup = document.querySelector("#form .rup");
+  if (rup) rup.addEventListener("click", () => {
+    const upi = prompt("প্রাপকের UPI ID লেখো (যেমন name@upi)");
+    if (!upi) return;
+    const am = prompt("কত টাকা?");
+    if (!am || isNaN(am)) return;
+    location.href = "upi://pay?pa=" + encodeURIComponent(upi.trim()) + "&pn=" + encodeURIComponent(($id("roomName").textContent || "").trim()) + "&am=" + encodeURIComponent(am) + "&cu=INR";
+  });
+})();
   </script>
 </body>
 </html>
