@@ -63,7 +63,23 @@ header button,.ibtn{background:transparent;border:none;color:#fff;font-size:20px
 #viewer img,#viewer video{max-width:100%;max-height:80%}
 .fab{position:absolute;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;background:#25d366;color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)}
 #room{height:100dvh}
- #call{background:#0b141a}
+ /* ===== নতুন কল ডিজাইন ===== */
+#call{background:linear-gradient(160deg,#1b1038,#0b1d3a 55%,#08242a)!important}
+#remoteWrap{display:flex!important;flex-direction:column;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 14px) 12px 104px!important;background:transparent!important}
+#remoteVideo,#localVideo{position:static!important;top:auto!important;right:auto!important;left:auto!important;flex:1!important;min-height:0;width:100%!important;height:auto!important;object-fit:cover;border:none!important;border-radius:26px!important;background:#1d1d2b!important;box-shadow:0 0 0 2px rgba(255,255,255,.16),0 10px 30px rgba(0,0,0,.45)}
+#localVideo{transform:scaleX(-1)}
+#callTop{background:none!important;padding:calc(env(safe-area-inset-top,0px) + 24px) 0 0!important;pointer-events:none}
+#callName{display:inline-block;background:rgba(255,255,255,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:7px 20px;border-radius:30px;font-size:17px!important}
+#callStatus{margin-top:8px;font-size:15px!important;letter-spacing:1px}
+#audioFace{background:radial-gradient(circle at 50% 40%,#3a1f7a,#0b1d3a 70%)!important}
+#audioAv{width:150px!important;height:150px!important;background:linear-gradient(135deg,#8b5cf6,#06b6d4)!important;font-size:64px!important;animation:pulseRing 2s infinite}
+@keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(139,92,246,.55)}100%{box-shadow:0 0 0 46px rgba(139,92,246,0)}}
+#call .cbar{left:50%!important;right:auto!important;transform:translateX(-50%);width:auto!important;max-width:94vw;background:rgba(255,255,255,.12)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:40px!important;padding:10px 14px!important;gap:10px!important}
+#call .cbar button{width:50px!important;height:50px!important;border-radius:50%!important;background:rgba(255,255,255,.18)!important;font-size:21px!important}
+#call .cbar #endBtn{width:70px!important;border-radius:30px!important;background:#ff3b5c!important}
+#incoming{background:linear-gradient(160deg,#1b1038,#0b1d3a)!important}
+#incoming button{box-shadow:0 0 0 10px rgba(255,255,255,.08)}
+  #call{background:#0b141a}
 #callInfo{display:none}
 #callTop{position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 18px) 16px 40px;text-align:center;color:#fff;background:linear-gradient(rgba(0,0,0,.55),transparent);z-index:3}
 #callName{font-size:22px;font-weight:bold}
