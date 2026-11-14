@@ -29,3 +29,12 @@ self.addEventListener("fetch", (e) => {
       .catch(() => caches.match(req).then((r) => r || caches.match("index.html")))
   );
 });
+
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+    for (const c of list) { if ("focus" in c) return c.focus(); }
+    return self.clients.openWindow("./");
+  }));
+});
