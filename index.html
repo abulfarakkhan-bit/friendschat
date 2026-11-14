@@ -196,6 +196,7 @@ header button,.ibtn{color:#111!important}
 #newChat{position:absolute;inset:0;height:100dvh;background:#fff;z-index:25;display:flex;flex-direction:column}
 #newChat .ncList{flex:1;overflow-y:auto}
 #ncSearch{margin:8px 14px;padding:11px 16px;border:none;border-radius:24px;background:#f0f2f5;font-size:16px;width:calc(100% - 28px)}
+#newChatBtn{z-index:3!important}
 </style>
 </head>
 <body>
@@ -537,11 +538,6 @@ function renderChats() {
     (b.inf.ts - a.inf.ts) ||
     String(a.u.name).localeCompare(String(b.u.name)));
   box.innerHTML = "";
-  box.appendChild(makeRow({
-    name: "বন্ধুদের গ্রুপ", photo: "", online: false, group: true,
-    info: roomInfo["group"] || empty,
-    onclick: () => openRoom("group", "বন্ধুদের গ্রুপ", null)
-  }));
   rows.forEach((r) => {
     box.appendChild(makeRow({
       name: r.u.name || "বন্ধু", photo: r.u.photo, online: r.online, group: false, info: r.inf,
