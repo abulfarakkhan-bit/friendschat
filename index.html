@@ -191,6 +191,11 @@ header button,.ibtn{color:#111!important}
 #app.dm img,#app.dm video,#app.dm .av,#app.dm #pAv{filter:invert(1) hue-rotate(180deg)}
 #call #remoteWrap{display:flex!important;flex-direction:column!important;gap:10px!important;padding:calc(env(safe-area-inset-top,0px) + 70px) 12px 110px!important}
 #call #remoteWrap #remoteVideo,#call #remoteWrap #localVideo{position:relative!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;width:100%!important;max-width:none!important;height:auto!important;flex:1 1 0!important;min-height:0!important;border-radius:24px!important;object-fit:cover!important;border:none!important}
+
+#newChatBtn{position:absolute;right:18px;bottom:92px;width:58px;height:58px;border-radius:18px;background:#25d366;color:#fff;border:none;font-size:32px;line-height:1;box-shadow:0 3px 8px rgba(0,0,0,.35);z-index:6;cursor:pointer}
+#newChat{position:absolute;inset:0;height:100dvh;background:#fff;z-index:25;display:flex;flex-direction:column}
+#newChat .ncList{flex:1;overflow-y:auto}
+#ncSearch{margin:8px 14px;padding:11px 16px;border:none;border-radius:24px;background:#f0f2f5;font-size:16px;width:calc(100% - 28px)}
 </style>
 </head>
 <body>
@@ -345,7 +350,7 @@ syncBtns();
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, setDoc, doc, getDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, setDoc, doc, getDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, deleteDoc, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // ====== এখানে তোমার firebaseConfig বসাও ======
@@ -426,31 +431,148 @@ function avatar(name, photo, ring) {
   return d;
 }
 
-// ---------- চ্যাট তালিকা ----------
-function loadChats() {
-  onSnapshot(collection(db, "users"), (snap) => {
-    const box = $("chatsList");
-    box.innerHTML = "";
-    const g = document.createElement("div");
-    g.className = "item";
-    g.appendChild(avatar("গ", ""));
-    g.insertAdjacentHTML("beforeend", '<div><div class="nm">বন্ধুদের গ্রুপ</div><div class="sub">সবাই এখানে</div></div>');
-    g.onclick = () => openRoom("group", "বন্ধুদের গ্রুপ", null);
+// ===== নতুন চ্যাট তালিকা =====
+let chatUsers = [];
+const roomInfo = {};
+const roomUnsub = {};
+let usersUnsub = null;
+let chatTick = null;
 
-    snap.forEach((d) => {
-      const u = d.data();
-      if (u.uid === me.uid) return;
-      const it = document.createElement("div");
-      it.className = "item";
-      it.appendChild(avatar(u.name, u.photo));
-      it.insertAdjacentHTML("beforeend", '<div><div class="nm"></div><div class="sub">চ্যাট করো</div></div>');
-      it.querySelector(".nm").textContent = u.name;
-      const roomId = [me.uid, u.uid].sort().join("_");
-      it.onclick = () => openRoom(roomId, u.name, u.uid);
-      box.appendChild(it);
+function roomIdFor(uid) { return [me.uid, uid].sort().join("_"); }
+function lastReadOf(rid) { return Number(localStorage.getItem("lr_" + rid) || 0); }
+function msOf(t) { return t && t.toMillis ? t.toMillis() : (typeof t === "number" ? t : 0); }
+function isOnlineUser(u) { const ms = msOf(u.lastSeen); return ms > 0 && Date.now() - ms < 60000; }
+function timeLabel(ts) {
+  if (!ts) return "";
+  const d = new Date(ts), now = new Date();
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" });
+  const y = new Date(now.getTime() - 86400000);
+  if (d.toDateString() === y.toDateString()) return "গতকাল";
+  return d.toLocaleDateString("bn-BD");
+}
+
+function watchRoom(rid) {
+  if (roomUnsub[rid]) return;
+  const q = query(collection(db, "rooms", rid, "messages"), orderBy("createdAt", "desc"), limit(30));
+  roomUnsub[rid] = onSnapshot(q, (snap) => {
+    const roomOpen = !$("room").classList.contains("hide") && currentRoom === rid;
+    if (roomOpen) localStorage.setItem("lr_" + rid, String(Date.now()));
+    const lr = lastReadOf(rid);
+    let unread = 0;
+    snap.docs.forEach((d) => {
+      const m = d.data();
+      const ms = msOf(m.createdAt) || Date.now();
+      if (m.uid !== me.uid && ms > lr) unread++;
     });
+    const m0 = snap.docs.length ? snap.docs[0].data() : null;
+    roomInfo[rid] = m0 ? {
+      text: m0.type === "image" ? "📷 ছবি" : m0.type === "voice" ? "🎤 ভয়েস মেসেজ" : (m0.text || ""),
+      mine: m0.uid === me.uid,
+      who: m0.name || "",
+      ts: msOf(m0.createdAt) || Date.now(),
+      unread: unread
+    } : { text: "", mine: false, who: "", ts: 0, unread: 0 };
+    renderChats();
   });
 }
+
+function makeRow(o) {
+  const inf = o.info;
+  const it = document.createElement("div");
+  it.className = "item" + (inf.unread > 0 ? " unread" : "");
+  const wrap = document.createElement("div");
+  wrap.className = "avw";
+  wrap.appendChild(avatar(o.name, o.photo));
+  if (o.online) { const dot = document.createElement("div"); dot.className = "dot"; wrap.appendChild(dot); }
+  const mid = document.createElement("div");
+  mid.style.flex = "1";
+  mid.style.minWidth = "0";
+  const nm = document.createElement("div");
+  nm.className = "nm";
+  nm.textContent = o.name;
+  const sub = document.createElement("div");
+  sub.className = "sub";
+  sub.style.display = "none";
+  const pv = document.createElement("div");
+  pv.className = "pv";
+  if (inf.text) {
+    pv.textContent = (inf.mine ? "তুমি: " : (o.group && inf.who ? inf.who.split(" ")[0] + ": " : "")) + inf.text;
+  } else if (o.online) {
+    pv.textContent = "● অনলাইন";
+    pv.style.color = "#25d366";
+  } else {
+    pv.textContent = o.group ? "সবাই এখানে" : "চ্যাট করো";
+  }
+  mid.appendChild(nm);
+  mid.appendChild(sub);
+  mid.appendChild(pv);
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  const tm = document.createElement("div");
+  tm.className = "tm";
+  tm.textContent = timeLabel(inf.ts);
+  meta.appendChild(tm);
+  if (inf.unread > 0) {
+    const b = document.createElement("span");
+    b.className = "badge";
+    b.textContent = inf.unread > 99 ? "99+" : String(inf.unread);
+    meta.appendChild(b);
+  }
+  it.appendChild(wrap);
+  it.appendChild(mid);
+  it.appendChild(meta);
+  it.onclick = o.onclick;
+  return it;
+}
+
+function renderChats() {
+  const box = $("chatsList");
+  if (!box || !me) return;
+  const empty = { text: "", mine: false, who: "", ts: 0, unread: 0 };
+  const rows = chatUsers.map((u) => ({ u: u, rid: roomIdFor(u.uid), online: isOnlineUser(u) }));
+  rows.forEach((r) => { r.inf = roomInfo[r.rid] || empty; });
+  rows.sort((a, b) =>
+    (b.inf.unread > 0) - (a.inf.unread > 0) ||
+    (b.online - a.online) ||
+    (b.inf.ts - a.inf.ts) ||
+    String(a.u.name).localeCompare(String(b.u.name)));
+  box.innerHTML = "";
+  box.appendChild(makeRow({
+    name: "বন্ধুদের গ্রুপ", photo: "", online: false, group: true,
+    info: roomInfo["group"] || empty,
+    onclick: () => openRoom("group", "বন্ধুদের গ্রুপ", null)
+  }));
+  rows.forEach((r) => {
+    box.appendChild(makeRow({
+      name: r.u.name || "বন্ধু", photo: r.u.photo, online: r.online, group: false, info: r.inf,
+      onclick: () => openRoom(r.rid, r.u.name, r.u.uid)
+    }));
+  });
+}
+
+function loadChats() {
+  if (usersUnsub) usersUnsub();
+  Object.keys(roomUnsub).forEach((k) => { roomUnsub[k](); delete roomUnsub[k]; });
+  watchRoom("group");
+  usersUnsub = onSnapshot(collection(db, "users"), (snap) => {
+    chatUsers = [];
+    snap.forEach((d) => {
+      const u = d.data();
+      if (u.uid && u.uid !== me.uid) chatUsers.push(u);
+    });
+    chatUsers.forEach((u) => watchRoom(roomIdFor(u.uid)));
+    renderChats();
+  });
+  if (!chatTick) chatTick = setInterval(renderChats, 15000);
+}
+
+new MutationObserver(() => {
+  if (!$("room").classList.contains("hide") && currentRoom) {
+    localStorage.setItem("lr_" + currentRoom, String(Date.now()));
+    if (roomInfo[currentRoom]) roomInfo[currentRoom].unread = 0;
+    renderChats();
+  }
+}).observe($("room"), { attributes: true, attributeFilter: ["class"] });
   
 // ---------- চ্যাট রুম ----------
 async function openRoom(roomId, name, other) {
@@ -1963,6 +2085,101 @@ new MutationObserver(() => {
     lastRoom = currentRoom; lastCount = els.length;
   }, 300);
 }).observe($("msgs"), { childList: true });
+  // ===== নতুন চ্যাট (＋ বাটন) =====
+(function () {
+  const fab = document.createElement("button");
+  fab.id = "newChatBtn";
+  fab.textContent = "＋";
+  $("main").appendChild(fab);
+
+  function syncFab() { fab.style.display = $("chatsList").classList.contains("hide") ? "none" : "block"; }
+  new MutationObserver(syncFab).observe($("chatsList"), { attributes: true, attributeFilter: ["class"] });
+  syncFab();
+
+  function ms(t) { return t && t.toMillis ? t.toMillis() : (typeof t === "number" ? t : 0); }
+
+  fab.onclick = async () => {
+    if (document.getElementById("newChat")) return;
+    const panel = document.createElement("div");
+    panel.id = "newChat";
+    const head = document.createElement("header");
+    const back = document.createElement("button");
+    back.textContent = "←";
+    const title = document.createElement("div");
+    title.className = "title";
+    title.textContent = "চ্যাট শুরু করো";
+    head.appendChild(back);
+    head.appendChild(title);
+    const search = document.createElement("input");
+    search.id = "ncSearch";
+    search.placeholder = "বন্ধু খোঁজো...";
+    const list = document.createElement("div");
+    list.className = "ncList";
+    panel.appendChild(head);
+    panel.appendChild(search);
+    panel.appendChild(list);
+    $("app").appendChild(panel);
+    back.onclick = () => panel.remove();
+    list.textContent = "লোড হচ্ছে...";
+
+    const users = [];
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      snap.forEach((d) => { const u = d.data(); if (u.uid && u.uid !== me.uid) users.push(u); });
+    } catch (e) { list.textContent = "বন্ধুদের তালিকা আনা যায়নি"; return; }
+    users.sort((a, b) => ms(b.lastSeen) - ms(a.lastSeen));
+
+    function draw() {
+      const q = search.value.trim().toLowerCase();
+      list.textContent = "";
+      const inv = $("inviteBtn");
+      if (inv && !q) {
+        const r = document.createElement("div");
+        r.className = "item";
+        const ic = document.createElement("div");
+        ic.className = "av";
+        ic.style.background = "#25d366";
+        ic.textContent = "🔗";
+        const t = document.createElement("div");
+        t.className = "nm";
+        t.textContent = "বন্ধুদের ইনভাইট করো";
+        r.appendChild(ic);
+        r.appendChild(t);
+        r.onclick = () => { panel.remove(); inv.click(); };
+        list.appendChild(r);
+      }
+      const shown = users.filter((u) => !q || String(u.name || "").toLowerCase().includes(q));
+      if (!shown.length) {
+        const p = document.createElement("div");
+        p.className = "soon";
+        p.textContent = "কাউকে পাওয়া যায়নি। বন্ধুকে ইনভাইট করো।";
+        list.appendChild(p);
+        return;
+      }
+      shown.forEach((u) => {
+        const r = document.createElement("div");
+        r.className = "item";
+        r.appendChild(avatar(u.name, u.photo));
+        const box = document.createElement("div");
+        const nm = document.createElement("div");
+        nm.className = "nm";
+        nm.textContent = u.name || "বন্ধু";
+        const sub = document.createElement("div");
+        sub.className = "sub";
+        const on = ms(u.lastSeen) > 0 && Date.now() - ms(u.lastSeen) < 60000;
+        sub.textContent = u.bio ? u.bio : (on ? "● অনলাইন" : "চ্যাট করো");
+        if (!u.bio && on) sub.style.color = "#25d366";
+        box.appendChild(nm);
+        box.appendChild(sub);
+        r.appendChild(box);
+        r.onclick = () => { panel.remove(); openRoom([me.uid, u.uid].sort().join("_"), u.name, u.uid); };
+        list.appendChild(r);
+      });
+    }
+    search.oninput = draw;
+    draw();
+  };
+})();
   </script>
 </body>
 </html>
