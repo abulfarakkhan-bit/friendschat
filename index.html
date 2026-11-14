@@ -189,6 +189,8 @@ header button,.ibtn{color:#111!important}
 #searchWrap .sIc{position:absolute;left:40px;top:50%;transform:translateY(-50%);width:24px;height:24px;fill:#5f6b73;pointer-events:none}
 #app.dm{filter:invert(1) hue-rotate(180deg)}
 #app.dm img,#app.dm video,#app.dm .av,#app.dm #pAv{filter:invert(1) hue-rotate(180deg)}
+#call #remoteWrap{display:flex!important;flex-direction:column!important;gap:10px!important;padding:calc(env(safe-area-inset-top,0px) + 70px) 12px 110px!important}
+#call #remoteWrap #remoteVideo,#call #remoteWrap #localVideo{position:relative!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;width:100%!important;max-width:none!important;height:auto!important;flex:1 1 0!important;min-height:0!important;border-radius:24px!important;object-fit:cover!important;border:none!important}
 </style>
 </head>
 <body>
@@ -1905,6 +1907,62 @@ $("back").addEventListener("click", () => clearInterval(statusTimer));
     if ($("incoming").classList.contains("hide")) stopRing(); else startRing();
   }).observe($("incoming"), { attributes: true, attributeFilter: ["class"] });
 })();
+  // ===== কলারের রিং (রিংব্যাক) =====
+(function () {
+  let ctx = null, t = null;
+  function getCtx() {
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (ctx && ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+  ["click", "touchstart"].forEach((ev) => document.addEventListener(ev, getCtx, { passive: true }));
+  function beep(at, dur) {
+    const c = getCtx();
+    if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.frequency.value = 425; g.gain.value = 0.12;
+    o.connect(g); g.connect(c.destination);
+    o.start(c.currentTime + at); o.stop(c.currentTime + at + dur);
+  }
+  function pattern() { beep(0, 0.4); beep(0.6, 0.4); }
+  setInterval(() => {
+    const calling = !$("call").classList.contains("hide") && ($("callInfo").textContent || "").includes("কল করা হচ্ছে");
+    if (calling && !t) { pattern(); t = setInterval(pattern, 3000); }
+    if (!calling && t) { clearInterval(t); t = null; }
+  }, 400);
+})();
+
+// ===== নোটিফিকেশন (অ্যাপ ব্যাকগ্রাউন্ডে থাকলে) =====
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+document.addEventListener("click", () => {
+  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+}, { once: true });
+
+async function notify(title, body, tag) {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification(title, { body: body, tag: tag, renotify: true, vibrate: [300, 150, 300], requireInteraction: tag === "call" });
+  } catch (e) {}
+}
+
+new MutationObserver(() => {
+  if (!$("incoming").classList.contains("hide") && document.hidden) {
+    notify("📞 " + ($("incName").textContent || "ইনকামিং কল"), "কল ধরতে এখানে ট্যাপ করো", "call");
+  }
+}).observe($("incoming"), { attributes: true, attributeFilter: ["class"] });
+
+let lastCount = 0, lastRoom = null, deb = null;
+new MutationObserver(() => {
+  clearTimeout(deb);
+  deb = setTimeout(() => {
+    const els = Array.from(document.querySelectorAll("#msgs .msg:not(.me)"));
+    if (lastRoom === currentRoom && els.length > lastCount && document.hidden) {
+      notify("💬 নতুন মেসেজ", els[els.length - 1].textContent.slice(0, 80), "msg");
+    }
+    lastRoom = currentRoom; lastCount = els.length;
+  }, 300);
+}).observe($("msgs"), { childList: true });
   </script>
 </body>
 </html>
