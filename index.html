@@ -674,7 +674,7 @@ $("storyFile").onchange = async (e) => {
 };
 
 function loadStories() {
-  (collection(db, "stories"), (snap) => {
+ onSnapshot (collection(db, "stories"), (snap) => {
     const box = $("storiesList");
     box.innerHTML = "";
     const cutoff = Date.now() - 24 * 3600 * 1000;
@@ -782,7 +782,7 @@ async function startCall(video) {
     from: me.uid, fromName: me.displayName || me.phoneNumber || "বন্ধু", to: otherUid,
     video, status: "ringing", offer: { type: offer.type, sdp: offer.sdp }, ts: Date.now()
   });
-  push(
+  callUnsubs.push(onSnapshot
     (callDocRef, async (s) => {
     const d = s.data();
     if (!d) return;
@@ -798,7 +798,7 @@ async function startCall(video) {
 }
 
 let incomingCall = null;
-function listenIncoming() {callUnsubs
+function listenIncoming() {
   const q = query(collection(db, "calls"), where("to", "==", me.uid), where("status", "==", "ringing"));
   onSnapshot(q, (snap) => {
     snap.docChanges().forEach((c) => {
