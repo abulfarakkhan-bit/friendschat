@@ -3075,6 +3075,125 @@ onAuthStateChanged(auth, (u) => {
   new MutationObserver(addSettings).observe(mainEl, { childList: true, subtree: true });
   addSettings();
 })();
+  // ===== চ্যাট লিস্ট ও মূল স্ক্রিন ইংরেজি =====
+(function () {
+  const root = document.getElementById("main");
+  const BN = "০১২৩৪৫৬৭৮৯";
+  const toEn = (s) => s.replace(/[০-৯]/g, (d) => BN.indexOf(d));
+  const isTime = /^[\s০-৯0-9:.,\/\-]+(AM|PM|am|pm)?\s*$/;
+  const MAP = {
+    "চ্যাট করো": "Chat",
+    "ভয়েস মেসেজ": "Voice message",
+    "ছবি": "Photo",
+    "ভিডিও": "Video",
+    "স্টিকার": "Sticker",
+    "ফাইল": "File",
+    "গতকাল": "Yesterday",
+    "আজ": "Today",
+    "বন্ধু": "Friend",
+    "বন্ধুদের ইনভাইট করো": "Invite friends",
+    "লিংক পাঠিয়ে বন্ধুকে ডেকে আনো": "Share a link to invite friends",
+    "সার্চ করো...": "Search"
+  };
+
+  function fix(n) {
+    const t = n.nodeValue;
+    if (!/[\u0980-\u09FF]/.test(t)) return;
+    const tr = t.trim();
+    if (!tr) return;
+    let out = t;
+    if (isTime.test(tr)) {
+      out = toEn(t);
+    } else {
+      let pre = "", rest = t;
+      const mp = rest.match(/^(\s*)তুমি:\s*/);
+      if (mp) { pre = mp[1] + "You: "; rest = rest.slice(mp[0].length); }
+      const em = rest.match(/^[^\u0980-\u09FFA-Za-z0-9]*/)[0];
+      const core = rest.slice(em.length).trim();
+      if (MAP[core] !== undefined) out = pre + em + MAP[core];
+      else if (mp) out = pre + rest;
+    }
+    if (out !== t) n.nodeValue = out;
+  }
+
+  function run() {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach(fix);
+  }
+
+  let q = false;
+  new MutationObserver(() => {
+    if (q) return;
+    q = true;
+    requestAnimationFrame(() => { q = false; run(); });
+  }).observe(root, { childList: true, subtree: true, characterData: true });
+  run();
+})();
+ // ===== Back বাটন: একটা একটা করে বন্ধ =====
+(function () {
+  const $ = (i) => document.getElementById(i);
+  const shown = (id) => { const e = $(id); return !!e && !e.classList.contains("hide"); };
+
+  function openPopup() {
+    const cm = $("cMenu"); if (cm) return cm;
+    const em = $("wEmoji"); if (em) return em;
+    const nodes = document.querySelectorAll("#room > div, #main > div");
+    for (const e of nodes) {
+      if (e.style && e.style.zIndex === "50" && e.style.display === "block") return e;
+    }
+    return null;
+  }
+
+  // কিছু বন্ধ করলে বা আটকালে true, বন্ধ করার কিছু না থাকলে false
+  function closeTop() {
+    if ($("pinLock") || shown("call") || shown("incoming")) return true;
+
+    const pop = openPopup();
+    if (pop) {
+      if (pop.id === "cMenu" || pop.id === "wEmoji") pop.remove();
+      else pop.style.display = "none";
+      return true;
+    }
+
+    const sp = $("sPanel");
+    if (sp) { const b = sp.querySelector("span"); if (b) b.click(); else sp.remove(); return true; }
+    const mp = $("mPanel"); if (mp) { mp.remove(); return true; }
+    const wp = $("wPanel"); if (wp) { wp.remove(); return true; }
+
+    const room = $("room");
+    const z45 = Array.from(room.children).filter((e) => e.style && e.style.zIndex === "45").pop();
+    if (z45) { z45.remove(); return true; }
+
+    const cv = $("cView"); if (cv) { cv.remove(); return true; }
+    const ws = $("wSearch"); if (ws) { const x = ws.querySelector("span"); if (x) x.click(); else ws.remove(); return true; }
+    const fp = $("friendProfileView"); if (fp) { fp.remove(); return true; }
+
+    if (shown("viewer")) { $("closeViewer").click(); return true; }
+    if (shown("profile")) { $("pBack").click(); return true; }
+    if (shown("room")) { $("back").click(); return true; }
+
+    // অন্য ট্যাবে থাকলে আগে Chats-এ ফেরা
+    const on = document.querySelector("#bottomNav div.on");
+    if (on && on.dataset.n !== "chats") {
+      const c = document.querySelector('#bottomNav div[data-n="chats"]');
+      if (c) { c.click(); return true; }
+    }
+    return false;
+  }
+
+  const s = history.state;
+  if (!(s && s.fc === "guard")) {
+    history.replaceState({ fc: "base" }, "");
+    history.pushState({ fc: "guard" }, "");
+  }
+
+  window.addEventListener("popstate", () => {
+    if (closeTop()) { history.pushState({ fc: "guard" }, ""); return; }
+    history.back(); // কিছু বন্ধ করার নেই, এবার অ্যাপ বন্ধ
+  });
+})();
   </script>
 </body>
 </html>
