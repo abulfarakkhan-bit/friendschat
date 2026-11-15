@@ -3051,6 +3051,30 @@ onAuthStateChanged(auth, (u) => {
     }
   }
 })();
+  // ===== থ্রি ডট মেনুতে Settings =====
+(function () {
+  const mainEl = document.getElementById("main");
+  function addSettings() {
+    Array.from(mainEl.children).forEach((menu) => {
+      if (!menu.style || menu.style.zIndex !== "50") return;
+      const items = Array.from(menu.children);
+      if (!items.length) return;
+      if (items.some((d) => d.textContent.trim() === "Settings")) return;
+      const d = document.createElement("div");
+      d.textContent = "Settings";
+      d.style.cssText = "padding:16px 22px;font-size:17px;cursor:pointer";
+      d.onclick = () => {
+        menu.style.display = "none";
+        const g = document.getElementById("gearBtn");
+        if (g) g.click(); else alert("Settings পাওয়া যায়নি");
+      };
+      const before = items.find((x) => /^(Profile|প্রোফাইল)$/.test(x.textContent.trim()));
+      if (before) menu.insertBefore(d, before); else menu.appendChild(d);
+    });
+  }
+  new MutationObserver(addSettings).observe(mainEl, { childList: true, subtree: true });
+  addSettings();
+})();
   </script>
 </body>
 </html>
