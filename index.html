@@ -197,6 +197,26 @@ header button,.ibtn{color:#111!important}
 #newChat .ncList{flex:1;overflow-y:auto}
 #ncSearch{margin:8px 14px;padding:11px 16px;border:none;border-radius:24px;background:#f0f2f5;font-size:16px;width:calc(100% - 28px)}
 #newChatBtn{z-index:3!important}
+/* ===== প্রোফাইল স্ক্রিন ===== */
+#profile{background:#efeae2!important}
+#profile .pTop{display:flex;justify-content:space-between;align-items:center;padding:14px 16px}
+#profile .pTop button{background:none;border:none;font-size:30px;color:#111;cursor:pointer;display:flex;padding:4px}
+#profile .pBody{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center}
+#profile #pBio{width:auto;min-width:170px;max-width:80%;text-align:center;background:#fff;border:none!important;border-radius:22px;padding:12px 18px;font-size:15px;color:#444;resize:none;outline:none;margin-bottom:10px;flex-shrink:0}
+#profile #pAv{width:130px;height:130px;margin-bottom:-65px;position:relative;z-index:2;border:4px solid #fff;flex-shrink:0}
+#profile #pAv::after{content:"📷";position:absolute;right:0;bottom:0;width:34px;height:34px;border-radius:50%;background:#1fa855;border:3px solid #fff;font-size:15px;display:flex;align-items:center;justify-content:center}
+#profile .pCard{width:100%;flex:1;background:#fff;border-radius:28px 28px 0 0;padding:80px 20px 40px;display:flex;flex-direction:column;align-items:center}
+#profile #pName{width:100%;max-width:none!important;border:none!important;text-align:center;font-size:28px!important;font-weight:800;padding:6px!important;outline:none;color:#111}
+#pWho{color:#667781;font-size:16px;margin-bottom:18px;text-align:center}
+.pNote{width:100%;background:#d9fdd3;border-radius:22px;padding:16px;display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;cursor:pointer;font-size:15px}
+.pNote small{font-size:14px;color:#333}
+.pNote #pInvX{margin-left:auto;font-size:18px;color:#333;padding:0 4px}
+.pRow{width:100%;display:flex;align-items:center;gap:22px;padding:18px 6px;cursor:pointer}
+.pRow svg{width:26px;height:26px;fill:#54656f;flex-shrink:0}
+.pRow b{display:block;font-size:17px;color:#111}
+.pRow small{display:block;color:#667781;font-size:14px;margin-top:3px}
+.pIc{width:26px;height:26px;border-radius:50%;background:#54656f;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;flex-shrink:0}
+#profile #saveProfile{margin-top:16px}
 </style>
 </head>
 <body>
@@ -303,19 +323,44 @@ header button,.ibtn{color:#111!important}
 </div>
 <!-- প্রোফাইল -->
 <div id="profile" class="hide">
-  <header>
-    <button id="pBack">←</button>
-    <div class="title">প্রোফাইল</div>
-  </header>
-  <div class="body">
+  <div class="pTop">
+    <button id="pBack" type="button">←</button>
+    <button id="pEdit" type="button"><svg viewBox="0 0 24 24" width="26" height="26" fill="#111"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+  </div>
+  <div class="pBody">
+    <textarea id="pBio" rows="1" maxlength="120" placeholder="Right now I'm…"></textarea>
     <div id="pAv" title="ছবি বদলাও"></div>
     <input type="file" id="pFile" accept="image/*" class="hide">
-    <label class="l">নাম</label>
-    <input id="pName" maxlength="40">
-    <label class="l">বায়ো</label>
-    <textarea id="pBio" rows="3" maxlength="120" placeholder="নিজের সম্পর্কে কিছু লেখো"></textarea>
-    <button id="saveProfile">সেভ করো</button>
-    <p id="pMsg" style="color:#075e54"></p>
+    <div class="pCard">
+      <input id="pName" maxlength="40" placeholder="তোমার নাম">
+      <div id="pWho"></div>
+
+      <div class="pNote" id="pInv">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="#1fa855"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        <div><b>বন্ধুদের ডাকো</b><br><small>Friends Chat-এর লিংক শেয়ার করো। <span style="color:#1fa855;font-weight:bold">Invite</span></small></div>
+        <span id="pInvX">✖</span>
+      </div>
+
+      <div class="pRow" id="rowPay">
+        <span class="pIc">₹</span>
+        <div><b>Payments</b><small>UPI দিয়ে টাকা পাঠাও</small></div>
+      </div>
+      <div class="pRow" id="rowDark">
+        <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.4A3.6 3.6 0 0 0 21 9.9C21 6 17 3 12 3zM6.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>
+        <div><b>Appearance</b><small id="darkSub">Dark mode: Off</small></div>
+      </div>
+      <div class="pRow" id="rowInstall">
+        <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm14-9h-4V3H9v8H5l7 7 7-7z"/></svg>
+        <div><b>Install app</b><small>Home screen-এ যোগ করো</small></div>
+      </div>
+      <div class="pRow" id="rowLogout">
+        <svg viewBox="0 0 24 24"><path d="M12.65 10A5.99 5.99 0 0 0 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6a5.99 5.99 0 0 0 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+        <div><b>Account</b><small>Logout</small></div>
+      </div>
+
+      <button id="saveProfile" type="button">সেভ করো</button>
+      <p id="pMsg" style="color:#075e54"></p>
+    </div>
   </div>
 </div>
 <!-- স্টোরি দেখা -->
@@ -2175,6 +2220,294 @@ new MutationObserver(() => {
     search.oninput = draw;
     draw();
   };
+})();
+  // ===== প্রোফাইল স্ক্রিন (WhatsApp স্টাইল) =====
+(function () {
+  const $ = (i) => document.getElementById(i);
+  const prof = $("profile"), appEl = $("app");
+
+  function sync() {
+    const u = auth.currentUser;
+    $("pWho").textContent = u ? (u.email || u.phoneNumber || "") : "";
+    $("darkSub").textContent = appEl.classList.contains("dm") ? "Dark mode: On" : "Dark mode: Off";
+  }
+  new MutationObserver(() => { if (!prof.classList.contains("hide")) sync(); })
+    .observe(prof, { attributes: true, attributeFilter: ["class"] });
+
+  $("pEdit").onclick = () => { const n = $("pName"); n.focus(); n.select(); };
+
+  function invite() {
+    const url = location.origin + location.pathname;
+    if (navigator.share) navigator.share({ title: "Friends Chat", text: "আমার সাথে Friends Chat-এ চ্যাট করো", url }).catch(() => {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => alert("লিংক কপি হয়েছে"));
+    else prompt("এই লিংক বন্ধুকে পাঠাও", url);
+  }
+  $("pInv").onclick = invite;
+  $("pInvX").onclick = (e) => { e.stopPropagation(); $("pInv").remove(); };
+
+  $("rowPay").onclick = () => {
+    const b = $("rupeeBtn");
+    if (b) b.click(); else alert("Payments বাটন পাওয়া যায়নি");
+  };
+
+  $("rowDark").onclick = () => {
+    const on = !appEl.classList.contains("dm");
+    appEl.classList.toggle("dm", on);
+    try { localStorage.setItem("darkmode", JSON.stringify(on)); } catch (e) {}
+    sync();
+  };
+
+  $("rowInstall").onclick = () => {
+    if (window.matchMedia("(display-mode: standalone)").matches) alert("অ্যাপ আগেই ইনস্টল করা আছে");
+    else alert("Chrome-এর ⋮ মেনু খুলে 'Add to Home screen' বা 'Install app' চাপো");
+  };
+
+  $("rowLogout").onclick = () => {
+    if (confirm("Logout করবে?")) { prof.classList.add("hide"); signOut(auth); }
+  };
+})();
+ // ===== বন্ধুর প্রোফাইল (WhatsApp কন্ট্যাক্ট ইনফো স্টাইল) =====
+(function () {
+  const $ = (i) => document.getElementById(i);
+  const roomEl = $("room"), header = $("roomHeader");
+  const ls = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+  const st = document.createElement("style");
+  st.textContent = `
+#cView{position:absolute;inset:0;z-index:40;background:#f0f2f5;overflow-y:auto;color:#111}
+#cView .cTop{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#fff;position:sticky;top:0;z-index:2}
+#cView .cTop span{font-size:28px;cursor:pointer;padding:2px 8px}
+#cView .cHero{background:#fff;text-align:center;padding:10px 16px 18px}
+#cView .cAv{width:130px;height:130px;border-radius:50%;margin:0 auto 12px;background:#075e54 center/cover;color:#fff;font-size:52px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#cView .cName{font-size:26px;font-weight:700}
+#cView .cSub{color:#667781;font-size:15px;margin-top:4px}
+#cView .cActs{display:flex;justify-content:center;gap:14px;background:#fff;padding:6px 10px 18px;flex-wrap:wrap}
+#cView .cAct{width:76px;text-align:center;font-size:14px;cursor:pointer}
+#cView .cAct i{display:flex;align-items:center;justify-content:center;width:76px;height:52px;border-radius:26px;background:#f4f3f1;margin-bottom:6px;font-style:normal;font-weight:bold;font-size:18px;color:#1fa855}
+#cView .cAct svg{width:24px;height:24px;fill:#333}
+#cView .cSec{background:#fff;margin-top:10px}
+#cView .cRow{display:flex;align-items:center;gap:22px;padding:16px 18px;cursor:pointer}
+#cView .cRow svg{width:26px;height:26px;fill:#54656f;flex-shrink:0}
+#cView .cRow b{display:block;font-weight:normal;font-size:17px}
+#cView .cRow small{display:block;color:#667781;font-size:14px;margin-top:3px}
+#cView .cRow.red b,#cView .cRow.red small{color:#d32f2f}
+#cView .cRow.red svg{fill:#d32f2f}`;
+  document.head.appendChild(st);
+
+  const P = {
+    phone: "M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C9.6 21 3 14.4 3 6a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z",
+    video: "M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11z",
+    share: "M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z",
+    clock: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z",
+    info: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z",
+    bell: "M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.1-1.6-5.6-4.5-6.3V4a1.5 1.5 0 0 0-3 0v.7C7.6 5.4 6 7.9 6 11v5l-2 2v1h16v-1l-2-2z",
+    image: "M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z",
+    search: "M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z",
+    timer: "M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.96 8.96 0 0 0 12 4a9 9 0 1 0 0 18 9 9 0 0 0 7.03-14.61zM12 20a7 7 0 1 1 0-14 7 7 0 0 1 0 14z",
+    palette: "M12 3a9 9 0 0 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.4A3.6 3.6 0 0 0 21 9.9C21 6 17 3 12 3zM6.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
+    block: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM4 12c0-4.4 3.6-8 8-8 1.8 0 3.5.6 4.9 1.7L5.7 16.9A7.9 7.9 0 0 1 4 12zm8 8c-1.8 0-3.5-.6-4.9-1.7L18.3 7.1A7.9 7.9 0 0 1 20 12c0 4.4-3.6 8-8 8z",
+    del: "M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
+    down: "M5 20h14v-2H5v2zm14-9h-4V3H9v8H5l7 7 7-7z"
+  };
+  const svg = (k) => '<svg viewBox="0 0 24 24"><path d="' + P[k] + '"/></svg>';
+
+  // পুরনো প্রোফাইল প্যানেল এলে সরিয়ে দাও
+  new MutationObserver(() => { const f = $("friendProfileView"); if (f) f.remove(); })
+    .observe(document.body, { childList: true });
+
+  // রুমের ⋮ মেনুর অপশন চালানো
+  function viaMenu(re) {
+    const mb = $("menuBtn");
+    if (!mb) { alert("মেনু পাওয়া যায়নি"); return null; }
+    mb.click();
+    const menu = Array.from(roomEl.children).find((c) => c.style && c.style.zIndex === "50");
+    const it = menu && Array.from(menu.children).find((d) => re.test(d.textContent.trim()));
+    if (it) it.click();
+    else { if (menu) menu.style.display = "none"; alert("এই অপশন পাওয়া যায়নি"); }
+    return it || null;
+  }
+  function viaMore(re) {
+    if (!viaMenu(/^More/)) return;
+    setTimeout(() => {
+      const p = $("wPanel");
+      const body = p && p.children[1];
+      const row = body && Array.from(body.children).find((r) => re.test(r.textContent.trim()));
+      if (row) row.click(); else alert("এই অপশন পাওয়া যায়নি");
+    }, 120);
+  }
+
+  header.addEventListener("click", async (e) => {
+    if (!otherUid) return;
+    e.stopImmediatePropagation();
+    const old = $("cView"); if (old) old.remove();
+    let u = {};
+    try {
+      const s = await getDoc(doc(db, "users", otherUid));
+      if (s.exists()) u = s.data();
+    } catch (er) {}
+    build(u);
+  }, true);
+
+  function build(u) {
+    const room = currentRoom;
+    const uid = otherUid;
+    const name = u.name || ($("roomName").textContent || "").trim() || "বন্ধু";
+    const v = document.createElement("div");
+    v.id = "cView";
+    const close = () => v.remove();
+
+    // উপরের বার
+    const top = document.createElement("div");
+    top.className = "cTop";
+    top.innerHTML = '<span>←</span><span>⋮</span>';
+    top.children[0].onclick = close;
+    v.appendChild(top);
+
+    // ছবি, নাম, বায়ো
+    const hero = document.createElement("div");
+    hero.className = "cHero";
+    const av = document.createElement("div");
+    av.className = "cAv";
+    if (u.photo) av.style.backgroundImage = 'url("' + u.photo + '")';
+    else av.textContent = name[0].toUpperCase();
+    av.onclick = () => {
+      if (!u.photo) return;
+      const o = document.createElement("div");
+      o.style.cssText = "position:absolute;inset:0;background:#000;z-index:45;display:flex;align-items:center;justify-content:center";
+      const im = document.createElement("img");
+      im.src = u.photo; im.style.cssText = "max-width:100%;max-height:100%";
+      o.appendChild(im);
+      o.onclick = () => o.remove();
+      roomEl.appendChild(o);
+    };
+    const nm = document.createElement("div"); nm.className = "cName"; nm.textContent = name;
+    const sb = document.createElement("div"); sb.className = "cSub"; sb.textContent = u.bio || "কোনো বায়ো নেই";
+    hero.append(av, nm, sb);
+    v.appendChild(hero);
+
+    // ---------- Share ----------
+    function share() {
+      const url = location.origin + location.pathname;
+      const text = name + (u.bio ? " - " + u.bio : "") + " | Friends Chat";
+      if (navigator.share) navigator.share({ title: name, text, url }).catch(() => {});
+      else if (navigator.clipboard) navigator.clipboard.writeText(text + " " + url).then(() => alert("কপি হয়েছে"));
+      else prompt("কপি করো", text + " " + url);
+    }
+
+    // ---------- Pay ----------
+    function pay() {
+      const p = document.createElement("div");
+      p.style.cssText = "position:absolute;inset:0;background:#fff;color:#111;z-index:45;padding:16px;overflow:auto";
+      const hd = document.createElement("div");
+      hd.style.cssText = "display:flex;align-items:center;gap:14px;font-size:20px;font-weight:bold;margin-bottom:18px";
+      hd.innerHTML = '<span style="font-size:28px;cursor:pointer">←</span><span></span>';
+      hd.children[1].textContent = "Pay " + name;
+      hd.children[0].onclick = () => p.remove();
+      const css = "width:100%;padding:13px;border:1px solid #ccc;border-radius:8px;font-size:16px;margin-bottom:12px";
+      const upi = document.createElement("input"); upi.placeholder = "UPI ID (যেমন name@upi)"; upi.style.cssText = css; upi.value = ls("upi_" + uid, "");
+      const am = document.createElement("input"); am.placeholder = "টাকার অঙ্ক"; am.type = "number"; am.style.cssText = css;
+      const nt = document.createElement("input"); nt.placeholder = "নোট (ঐচ্ছিক)"; nt.style.cssText = css;
+      const hint = document.createElement("div");
+      hint.style.cssText = "color:#667781;font-size:13px;margin-bottom:14px";
+      hint.textContent = "UPI ID একবার দিলে এই বন্ধুর জন্য মনে থাকবে।";
+      const go = document.createElement("button");
+      go.textContent = "Pay";
+      go.style.cssText = "width:100%;padding:14px;background:#1fa855;color:#fff;border:none;border-radius:8px;font-size:17px";
+      go.onclick = () => {
+        const a = upi.value.trim(), m = am.value.trim();
+        if (!a || !a.includes("@")) { alert("সঠিক UPI ID লেখো"); return; }
+        if (!m || isNaN(m) || Number(m) <= 0) { alert("টাকার অঙ্ক লেখো"); return; }
+        lsSet("upi_" + uid, a);
+        location.href = "upi://pay?pa=" + encodeURIComponent(a) + "&pn=" + encodeURIComponent(name) + "&am=" + encodeURIComponent(m) + "&tn=" + encodeURIComponent(nt.value.trim()) + "&cu=INR";
+      };
+      p.append(hd, upi, am, nt, hint, go);
+      roomEl.appendChild(p);
+    }
+
+    // ---------- বাটনের সারি ----------
+    const acts = document.createElement("div");
+    acts.className = "cActs";
+    [
+      [svg("phone"), "Voice", () => { close(); $("acall").click(); }],
+      [svg("video"), "Video", () => { close(); $("vcall").click(); }],
+      ["₹", "Pay", pay],
+      [svg("share"), "Share", share]
+    ].forEach(([ic, lb, fn]) => {
+      const a = document.createElement("div");
+      a.className = "cAct";
+      a.innerHTML = "<i>" + ic + "</i><span>" + lb + "</span>";
+      a.onclick = fn;
+      acts.appendChild(a);
+    });
+    v.appendChild(acts);
+
+    // ---------- সারি বানানোর ফাংশন ----------
+    function row(icon, title, sub, fn, red) {
+      const r = document.createElement("div");
+      r.className = "cRow" + (red ? " red" : "");
+      r.innerHTML = svg(icon) + "<div><b></b><small></small></div>";
+      r.querySelector("b").textContent = title;
+      const s = r.querySelector("small");
+      if (sub) s.textContent = sub; else s.remove();
+      if (fn) r.onclick = fn;
+      return r;
+    }
+    function section(rows) {
+      const s = document.createElement("div");
+      s.className = "cSec";
+      rows.forEach((r) => s.appendChild(r));
+      v.appendChild(s);
+    }
+
+    // বর্তমান অবস্থা
+    let seen = "";
+    try {
+      const d = u.lastSeen && u.lastSeen.toDate ? u.lastSeen.toDate() : null;
+      if (d) seen = d.toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    } catch (er) {}
+    const mv = ls("mute_" + room, 0);
+    const muted = mv === -1 || mv > Date.now();
+    const dh = (ls("dis_" + room, { h: 0 }) || { h: 0 }).h;
+    const disT = dh === 24 ? "24 hours" : dh === 168 ? "7 days" : "Off";
+    const blocked = !!ls("block_" + room, false);
+
+    section([
+      row("clock", "Last seen", seen || "জানা নেই"),
+      row("info", "About", u.bio || "কোনো বায়ো নেই")
+    ]);
+    section([
+      row("bell", "Notifications", muted ? "Muted" : "On", () => viaMenu(/mute notifications/i)),
+      row("image", "Media, links, and docs", "", () => viaMenu(/Media, links/i)),
+      row("search", "Search in chat", "", () => viaMenu(/^Search/i)),
+      row("timer", "Disappearing messages", disT, () => viaMenu(/Disappearing/i)),
+      row("palette", "Chat theme", "", () => viaMenu(/Chat theme/i))
+    ]);
+    section([
+      row("down", "Export chat", "", () => viaMore(/Export chat/i)),
+      row("del", "Clear chat", "", () => viaMore(/Clear chat/i), true),
+      row("block", blocked ? "Unblock " + name : "Block " + name, "", () => viaMore(/^(Block|Unblock)$/i), true)
+    ]);
+
+    // ---------- ⋮ মেনু ----------
+    top.children[1].onclick = (e) => {
+      e.stopPropagation();
+      const old = $("cMenu"); if (old) { old.remove(); return; }
+      const m = document.createElement("div");
+      m.id = "cMenu";
+      m.style.cssText = "position:absolute;top:52px;right:10px;background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:3;min-width:190px";
+      [["Share contact", share], [blocked ? "Unblock" : "Block", () => viaMore(/^(Block|Unblock)$/i)]].forEach(([l, f]) => {
+        const d = document.createElement("div");
+        d.textContent = l; d.style.cssText = "padding:15px 20px;font-size:16px;cursor:pointer";
+        d.onclick = () => { m.remove(); f(); };
+        m.appendChild(d);
+      });
+      v.appendChild(m);
+    };
+    v.addEventListener("click", () => { const m = $("cMenu"); if (m) m.remove(); });
+
+    roomEl.appendChild(v);
+  }
 })();
   </script>
 </body>
