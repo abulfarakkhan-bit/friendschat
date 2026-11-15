@@ -444,7 +444,13 @@ onAuthStateChanged(auth, async (user) => {
   me = user;
   if (user) {
     const name = user.displayName || user.phoneNumber || "বন্ধু";
-    await setDoc(doc(db, "users", user.uid), { uid: user.uid, name, photo: user.photoURL || "", lastSeen: serverTimestamp() }, { merge: true });
+    const uref = doc(db, "users", user.uid);
+const usnap = await getDoc(uref);
+if (usnap.exists()) {
+  await setDoc(uref, { uid: user.uid, lastSeen: serverTimestamp() }, { merge: true });
+} else {
+  await setDoc(uref, { uid: user.uid, name, photo: user.photoURL || "", lastSeen: serverTimestamp() }, { merge: true });
+}
     $("login").classList.add("hide");
     $("main").classList.remove("hide");
     loadChats();
