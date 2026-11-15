@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="bn" translate="no">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Friends Chat</title>
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#075e54">
@@ -13,6 +14,7 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
   });
 }
+setTimeout(function () { document.body.classList.add("authReady"); }, 4000);
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
@@ -218,6 +220,10 @@ header button,.ibtn{color:#111!important}
 .pIc{width:26px;height:26px;border-radius:50%;background:#54656f;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;flex-shrink:0}
 #profile #saveProfile{margin-top:16px}
 #room #roomStatus{color:#667781!important}
+/* ===== লগইন ঝলক বন্ধ ===== */
+body:not(.authReady) #login{display:none!important}
+body:not(.authReady) #app{background:#075e54}
+body:not(.authReady) #app::after{content:"Friends Chat";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:bold;z-index:100}
 </style>
 </head>
 <body>
@@ -2514,6 +2520,61 @@ new MutationObserver(() => {
     v.addEventListener("click", () => { const m = $("cMenu"); if (m) m.remove(); });
 
     roomEl.appendChild(v);
+  }
+})();
+  // ===== লগইন স্ক্রিনের ঝলক বন্ধ =====
+onAuthStateChanged(auth, (u) => {
+  if (u) {
+    document.getElementById("login").classList.add("hide");
+    document.getElementById("main").classList.remove("hide");
+  }
+  document.body.classList.add("authReady");
+});
+  // ===== ভয়েস রেকর্ডিংয়ের টাইমার =====
+(function () {
+  const form = document.getElementById("form");
+  form.style.position = "relative";
+  const st = document.createElement("style");
+  st.textContent = "@keyframes recBlink{0%,100%{opacity:1}50%{opacity:.2}}";
+  document.head.appendChild(st);
+
+  const bar = document.createElement("div");
+  bar.style.cssText = "display:none;position:absolute;left:8px;right:66px;top:6px;bottom:8px;background:#fff;border-radius:30px;box-shadow:0 1px 2px rgba(0,0,0,.2);z-index:5;align-items:center;gap:12px;padding:0 18px;pointer-events:none;color:#111";
+  bar.innerHTML = '<span style="width:14px;height:14px;border-radius:50%;background:#e53935;animation:recBlink 1s infinite"></span><b id="recTime" style="font-size:20px;min-width:52px">0:00</b><span style="color:#667781;font-size:15px">রেকর্ড হচ্ছে…</span>';
+  form.appendChild(bar);
+
+  const tEl = bar.querySelector("#recTime");
+  let t0 = 0, timer = null, cur = null;
+
+  function tick() {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    tEl.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+    if (cur && cur.state === "inactive") hide();
+  }
+  function show(rec) {
+    cur = rec;
+    t0 = Date.now();
+    tEl.textContent = "0:00";
+    bar.style.display = "flex";
+    clearInterval(timer);
+    timer = setInterval(tick, 250);
+  }
+  function hide() {
+    bar.style.display = "none";
+    clearInterval(timer);
+    timer = null;
+    cur = null;
+  }
+
+  if (window.MediaRecorder) {
+    const origStart = MediaRecorder.prototype.start;
+    MediaRecorder.prototype.start = function () {
+      const r = origStart.apply(this, arguments);
+      show(this);
+      this.addEventListener("stop", hide, { once: true });
+      this.addEventListener("error", hide, { once: true });
+      return r;
+    };
   }
 })();
   </script>
