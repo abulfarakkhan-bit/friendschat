@@ -2577,6 +2577,71 @@ onAuthStateChanged(auth, (u) => {
     };
   }
 })();
+ // ===== UI লেখা ইংরেজি করা =====
+(function () {
+  const EXACT = {
+    "চ্যাট": "Chats", "আপডেটস": "Updates", "কমিউনিটি": "Communities", "কল": "Calls",
+    "বন্ধুদের ইনভাইট করো": "Invite friends",
+    "লিংক পাঠিয়ে বন্ধুকে ডেকে আনো": "Share a link to invite friends",
+    "বন্ধুদের ডাকো": "Invite friends",
+    "গতকাল": "Yesterday", "আজ": "Today",
+    "Google দিয়ে ঢোকো": "Continue with Google",
+    "Facebook দিয়ে ঢোকো": "Continue with Facebook",
+    "মোবাইল নম্বর দিয়ে ঢোকো": "Continue with phone number",
+    "কোড পাঠাও": "Send code", "যাচাই করো": "Verify",
+    "প্রোফাইল": "Profile", "নাম": "Name", "বায়ো": "Bio",
+    "সেভ করো": "Save", "গ্রুপ বানাও": "Create group",
+    "কোনো বায়ো নেই": "No bio", "← ফিরে যাও": "← Back"
+  };
+  const PLACE = {
+    "সার্চ করো...": "Search", "মেসেজ লেখো": "Message",
+    "৬ সংখ্যার কোড": "6-digit code", "তোমার নাম": "Your name",
+    "নিজের সম্পর্কে কিছু লেখো": "About you", "গ্রুপের নাম": "Group name"
+  };
+  const BN = "০১২৩৪৫৬৭৮৯";
+  const toEn = (s) => s.replace(/[০-৯]/g, (d) => BN.indexOf(d));
+  const isTime = /^[\s০-৯0-9:.,\/\-]+(AM|PM|am|pm)?\s*$/;
+
+  function fixText(n) {
+    const p = n.parentElement;
+    if (!p || p.closest("#msgs, .nm, script, style")) return;
+    const t = n.nodeValue, tr = t.trim();
+    if (!tr) return;
+    let out = t;
+    if (p.closest("#chatsList .sub")) {
+      if (tr === "চ্যাট করো") out = "Chat";
+      else out = t.replace(/^(\s*)তুমি:/, "$1You:").replace("ভয়েস মেসেজ", "Voice message");
+    } else if (isTime.test(tr)) {
+      out = toEn(t);
+    } else if (EXACT[tr]) {
+      out = t.replace(tr, EXACT[tr]);
+    } else if (tr.indexOf("সেভ হয়েছে") === 0) {
+      out = t.replace("সেভ হয়েছে", "Saved");
+    }
+    if (out !== t) n.nodeValue = out;
+  }
+
+  function fixAll() {
+    const root = document.getElementById("app");
+    if (!root) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const list = [];
+    while (w.nextNode()) list.push(w.currentNode);
+    list.forEach(fixText);
+    root.querySelectorAll("[placeholder]").forEach((e) => {
+      const v = e.getAttribute("placeholder");
+      if (PLACE[v]) e.setAttribute("placeholder", PLACE[v]);
+    });
+  }
+
+  let q = false;
+  new MutationObserver(() => {
+    if (q) return;
+    q = true;
+    requestAnimationFrame(() => { q = false; fixAll(); });
+  }).observe(document.getElementById("app"), { childList: true, subtree: true, characterData: true });
+  fixAll();
+})();
   </script>
 </body>
 </html>
