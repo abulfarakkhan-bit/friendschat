@@ -224,6 +224,7 @@ header button,.ibtn{color:#111!important}
 body:not(.authReady) #login{display:none!important}
 body:not(.authReady) #app{background:#075e54}
 body:not(.authReady) #app::after{content:"Friends Chat";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:bold;z-index:100}
+#main .fab{bottom:125px!important}
 </style>
 </head>
 <body>
@@ -859,11 +860,13 @@ function loadStories() {
     const byUser = {};
     snap.forEach((d) => {
       const s = d.data();
-      if (s.ts < cutoff) return;
+      const tsMs = s.ts && s.ts.toMillis ? s.ts.toMillis() : s.ts;
+if (tsMs < cutoff) return;
       (byUser[s.uid] = byUser[s.uid] || []).push(s);
     });
     Object.values(byUser).forEach((list) => {
-      list.sort((a, b) => a.ts - b.ts);
+      const ms = (x) => (x.ts && x.ts.toMillis ? x.ts.toMillis() : x.ts);
+list.sort((a, b) => ms(a) - ms(b));
       const s0 = list[0];
       const it = document.createElement("div");
       it.className = "item";
@@ -3093,9 +3096,9 @@ onAuthStateChanged(auth, (u) => {
     "বন্ধু": "Friend",
     "বন্ধুদের ইনভাইট করো": "Invite friends",
     "লিংক পাঠিয়ে বন্ধুকে ডেকে আনো": "Share a link to invite friends",
+   "কোনো স্টোরি নেই। + চাপলে নিজেরটা দাও।": "No stories yet. Tap + to add yours.", 
     "সার্চ করো...": "Search"
   };
-
   function fix(n) {
     const t = n.nodeValue;
     if (!/[\u0980-\u09FF]/.test(t)) return;
