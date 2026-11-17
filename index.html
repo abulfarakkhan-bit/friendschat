@@ -225,6 +225,20 @@ body:not(.authReady) #login{display:none!important}
 body:not(.authReady) #app{background:#075e54}
 body:not(.authReady) #app::after{content:"Friends Chat";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:bold;z-index:100}
 #main .fab{bottom:125px!important}
+/* ===== অ্যানিমেশন ===== */
+@keyframes slideIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popMenu{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@keyframes msgPop{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:none}}
+#room:not(.hide),#profile:not(.hide),#sPanel,#mPanel,#wPanel,#cView{animation:slideIn .25s ease-out}
+#main:not(.hide){animation:fadeIn .3s ease-out}
+#room > div[style*="z-index: 50"],#main > div[style*="z-index: 50"]{transform-origin:top right;animation:popMenu .15s ease-out}
+.msg.pop{animation:msgPop .22s ease-out;transform-origin:left bottom}
+.msg.me.pop{transform-origin:right bottom}
+button,.item,.pRow,.sRow,.cRow,.cAct,#bottomNav div{transition:transform .12s,background-color .15s}
+button:active,.cAct:active,#bottomNav div:active{transform:scale(.93)}
+.item:active,.pRow:active,.sRow:active,.cRow:active{background-color:#eef0f2}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -3196,6 +3210,198 @@ onAuthStateChanged(auth, (u) => {
     if (closeTop()) { history.pushState({ fc: "guard" }, ""); return; }
     history.back(); // কিছু বন্ধ করার নেই, এবার অ্যাপ বন্ধ
   });
+})();
+ // ===== Online / typing... =====
+(function () {
+  const $ = (i) => document.getElementById(i);
+  const txt = $("txt");
+  const statusEl = $("roomStatus");
+
+  async function put(data) {
+    const u = auth.currentUser;
+    if (!u) return;
+    try { await setDoc(doc(db, "users", u.uid), data, { merge: true }); } catch (e) {}
+  }
+
+  // ---------- আমি অনলাইন ----------
+  function ping() { if (!document.hidden) put({ online: true, lastActive: Date.now() }); }
+  setInterval(ping, 25000);
+  ping();
+  onAuthStateChanged(auth, (u) => { if (u) ping(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) put({ online: false, lastActive: Date.now(), typingTo: "" });
+    else ping();
+  });
+  window.addEventListener("pagehide", () => {
+    put({ online: false, lastActive: Date.now(), typingTo: "" });
+  });
+
+  // ---------- আমি টাইপ করছি ----------
+  let lastSent = 0, idle = null, typingRoom = "";
+  function stopTyping() {
+    clearTimeout(idle);
+    if (typingRoom) { typingRoom = ""; put({ typingTo: "" }); }
+  }
+  txt.addEventListener("input", () => {
+    if (!otherUid) return;
+    if (!txt.value.trim()) { stopTyping(); return; }
+    const now = Date.now();
+    if (typingRoom !== currentRoom || now - lastSent > 3000) {
+      typingRoom = currentRoom;
+      lastSent = now;
+      put({ typingTo: currentRoom, typingAt: now });
+    }
+    clearTimeout(idle);
+    idle = setTimeout(stopTyping, 4000);
+  });
+  $("form").addEventListener("submit", stopTyping, true);
+
+  // ---------- বন্ধুর অবস্থা দেখা ----------
+  let unsub = null, watching = null, data = null;
+  function watch() {
+    const target = otherUid || null;
+    if (target === watching) return;
+    watching = target;
+    data = null;
+    if (unsub) { unsub(); unsub = null; }
+    if (target) {
+      unsub = onSnapshot(doc(db, "users", target), (s) => {
+        data = s.exists() ? s.data() : null;
+        render();
+      }, () => {});
+    }
+  }
+
+  function fmt(ms) {
+    const d = new Date(ms), n = new Date();
+    const t = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diff = Math.round((day(n) - day(d)) / 86400000);
+    if (diff === 0) return "today at " + t;
+    if (diff === 1) return "yesterday at " + t;
+    return d.toLocaleDateString([], { day: "numeric", month: "short" }) + " at " + t;
+  }
+
+  function render() {
+    if (!statusEl || !otherUid || !data) return;
+    const now = Date.now();
+    let s = "", color = "#667781";
+    if (data.typingTo === currentRoom && now - (data.typingAt || 0) < 6000) {
+      s = "typing..."; color = "#1fa855";
+    } else if (data.online && now - (data.lastActive || 0) < 60000) {
+      s = "Online"; color = "#1fa855";
+    } else {
+      let ms = data.lastActive || 0;
+      if (!ms && data.lastSeen && data.lastSeen.toMillis) ms = data.lastSeen.toMillis();
+      s = ms ? "Last seen " + fmt(ms) : "";
+    }
+    if (statusEl.textContent !== s) statusEl.textContent = s;
+    statusEl.style.setProperty("color", color, "important");
+  }
+
+  setInterval(() => { watch(); render(); }, 1000);
+})();
+  // ===== নতুন মেসেজের পপ-ইন =====
+(function () {
+  const msgs = document.getElementById("msgs");
+  let room = null, n = 0;
+  new MutationObserver(() => {
+    const all = msgs.querySelectorAll(".msg"), c = all.length;
+    if (currentRoom !== room) { room = currentRoom; n = c; return; }
+    if (c > n && n > 0) all[c - 1].classList.add("pop");
+    n = c;
+  }).observe(msgs, { childList: true });
+})();
+  // ===== Push ভাগ ১: চালু করা =====
+(function () {
+  const VAPID_KEY = "BOWeMwD9jlvsNouAa0KWmaDphbR9awxoTQ1UdnBeL-A4gOxsl4ubneT2kHvAPUnvR6ULLpIH6Ijbpmva7oGl-UI";
+  const $ = (i) => document.getElementById(i);
+  const ok = () => "serviceWorker" in navigator && "Notification" in window && "PushManager" in window;
+
+  async function saveToken() {
+    const u = auth.currentUser;
+    if (!u) return false;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const m = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js");
+      const token = await m.getToken(m.getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      if (!token) return false;
+      const ref = doc(db, "users", u.uid);
+      const s = await getDoc(ref);
+      const old = (s.exists() && s.data().fcmTokens) || [];
+      if (!old.includes(token)) await setDoc(ref, { fcmTokens: [token, ...old].slice(0, 5) }, { merge: true });
+      try { localStorage.setItem("notif_on", "false"); } catch (e) {}
+      return true;
+    } catch (e) { console.log("push:", e.message); return false; }
+  }
+
+  function banner() {
+    if (!ok() || $("pushBanner") || Notification.permission === "denied") return;
+    const b = document.createElement("div");
+    b.id = "pushBanner";
+    b.style.cssText = "display:flex;align-items:center;gap:12px;margin:4px 16px 8px;padding:12px 14px;background:#d9fdd3;border-radius:16px;font-size:14px;color:#111";
+    const t = document.createElement("div");
+    t.style.flex = "1";
+    t.textContent = "🔔 Turn on notifications to get messages and calls when the app is closed";
+    const btn = document.createElement("button");
+    btn.textContent = "Turn on";
+    btn.style.cssText = "background:#1fa855;color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:14px";
+    btn.onclick = async () => {
+      const p = await Notification.requestPermission();
+      if (p !== "granted") { alert("Notifications are blocked. Allow them in Chrome's site settings."); return; }
+      if (await saveToken()) { b.remove(); alert("Notifications are on"); }
+      else alert("Could not turn on. Please try again.");
+    };
+    b.append(t, btn);
+    $("searchWrap").after(b);
+  }
+
+  onAuthStateChanged(auth, (u) => {
+    if (!u || !ok()) return;
+    if (Notification.permission === "granted") saveToken(); else banner();
+  });
+})();
+  // ===== Push ভাগ ২: পাঠানো =====
+(function () {
+  const PUSH_URL = "https://lingering-math-9dcdfriendschat-push.abulfarakkhan.workers.dev";
+  const $ = (i) => document.getElementById(i);
+  let myName = null;
+
+  async function nameNow() {
+    if (myName) return myName;
+    try {
+      const s = await getDoc(doc(db, "users", auth.currentUser.uid));
+      myName = (s.exists() && s.data().name) || auth.currentUser.displayName || "Friend";
+    } catch (e) { myName = "Friend"; }
+    return myName;
+  }
+
+  async function push(type, body) {
+    if (!otherUid || !auth.currentUser) return;
+    try {
+      const room = currentRoom;
+      const s = await getDoc(doc(db, "users", otherUid));
+      const tokens = (s.exists() && s.data().fcmTokens) || [];
+      if (!tokens.length) return;
+      const idToken = await auth.currentUser.getIdToken();
+      fetch(PUSH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ idToken, from: auth.currentUser.uid, tokens, title: await nameNow(), body, room, type })
+      }).catch(() => {});
+    } catch (e) {}
+  }
+
+  $("form").addEventListener("submit", () => {
+    const t = $("txt").value.trim();
+    if (t) push("msg", t.length > 120 ? t.slice(0, 120) + "…" : t);
+  }, true);
+  $("mediaFile").addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) push("msg", f.type.indexOf("video/") === 0 ? "🎥 Video" : "📷 Photo");
+  });
+  $("vcall").addEventListener("click", () => push("call", "📹 Incoming video call"), true);
+  $("acall").addEventListener("click", () => push("call", "📞 Incoming voice call"), true);
 })();
   </script>
 </body>
