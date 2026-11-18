@@ -1,4 +1,4 @@
-const CACHE = "friendschat-v1";
+const CACHE = "friendschat-v2";
 const FILES = ["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -13,12 +13,11 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
-// আগে নেট থেকে আনবে (সবসময় নতুন ভার্সন), নেট না থাকলে সেভ করা কপি দেখাবে
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  if (url.origin !== location.origin) return; // Firebase ইত্যাদি বাদ
+  if (url.origin !== location.origin) return;
   e.respondWith(
     fetch(req)
       .then((res) => {
@@ -30,11 +29,37 @@ self.addEventListener("fetch", (e) => {
   );
 });
 
+self.addEventListener("push", (e) => {
+  let p = {};
+  try { p = e.data ? e.data.json() : {}; } catch (er) {}
+  const d = p.data || {};
+  const n = p.notification || {};
+  const title = d.title || n.title || "Friends Chat";
+  const body = d.body || n.body || "";
+  const isCall = d.type === "call";
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      if (list.some((c) => c.visibilityState === "visible")) return;
+      return self.registration.showNotification(title, {
+        body: body,
+        icon: "icon-192.png",
+        badge: "icon-192.png",
+        tag: d.room ? "room_" + d.room : "fc",
+        renotify: true,
+        vibrate: isCall ? [400, 200, 400, 200, 400, 200, 400] : [120],
+        requireInteraction: isCall,
+        data: { room: d.room || "" }
+      });
+    })
+  );
+});
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
-    for (const c of list) { if ("focus" in c) return c.focus(); }
-    return self.clients.openWindow("./");
-  }));
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) { if ("focus" in c) return c.focus(); }
+      return self.clients.openWindow("./");
+    })
+  );
 });
