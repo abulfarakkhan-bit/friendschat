@@ -35,8 +35,8 @@ self.addEventListener("push", (e) => {
   const d = p.data || {};
   const n = p.notification || {};
   const title = d.title || n.title || "Friends Chat";
-  const body = d.body || n.body || "";
-  const isCall = d.type === "call";
+  const body = d.body || d.text ||  n.body || "";
+  const isCall = d.type === "call"|| d.kind === "call";
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       if (list.some((c) => c.visibilityState === "visible")) return;
