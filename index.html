@@ -3469,6 +3469,23 @@ startCall = async function (video) {
   await oldStartCall(video);
   if (!was && inCall && to) pushTo(to, myName(), video ? "📹 ভিডিও কল করছে" : "📞 অডিও কল করছে", "call");
 };
+ // ===== পরীক্ষা: পুশের ফল দেখানো (পরে এটা মুছে দিতে পারো) =====
+pushTo = async function (uid, title, text, kind) {
+  try {
+    if (!uid || !me) return;
+    const s = await getDoc(doc(db, "users", uid));
+    const token = s.exists() ? s.data().fcm : null;
+    if (!token) { alert("বন্ধুর ফোনের ঠিকানা জমা নেই। বন্ধুকে নতুন লিংকে ঢুকে Allow দিতে বলো।"); return; }
+    const idToken = await me.getIdToken();
+    const r = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken: idToken, token: token, title: title, text: text, kind: kind })
+    });
+    const j = await r.json();
+    alert("পুশের ফল: " + JSON.stringify(j));
+  } catch (e) { alert("পুশ যায়নি: " + e.message); }
+};
   </script>
 </body>
 </html>
