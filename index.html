@@ -3404,6 +3404,71 @@ onAuthStateChanged(auth, (u) => {
   $("vcall").addEventListener("click", () => push("call", "📹 Incoming video call"), true);
   $("acall").addEventListener("click", () => push("call", "📞 Incoming voice call"), true);
 })();
+  // ===== পুশ নোটিফিকেশন (অ্যাপ বন্ধ থাকলেও) =====
+const WORKER_URL = "https://lingering-math-9dcdfriendschat-push.abulfarakkhan.workers.dev";
+const VAPID_KEY = "BOWeMwD9jlvsNouAa0KWmaDphbR9awxoTQ1UdnBeL-A4gOxsl4ubneT2kHvAPUnvR6ULLpIH6Ijbpmva7oGl-UI";
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+document.addEventListener("click", () => {
+  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+}, { once: true });
+
+let pushReady = false, pushTries = 0;
+async function trySetup() {
+  if (pushReady || !me || !("Notification" in window) || Notification.permission !== "granted") return;
+  pushReady = true;
+  try {
+    const mod = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js");
+    const reg = await navigator.serviceWorker.ready;
+    const token = await mod.getToken(mod.getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    if (token) await setDoc(doc(db, "users", me.uid), { fcm: token }, { merge: true });
+  } catch (e) {
+    pushReady = false;
+    pushTries++;
+    if (pushTries === 3) alert("নোটিফিকেশন চালু হয়নি: " + (e && e.message ? e.message : e));
+  }
+}
+setInterval(() => { if (pushTries < 3) trySetup(); }, 5000);
+
+async function pushTo(uid, title, text, kind) {
+  try {
+    if (!uid || !me) return;
+    const s = await getDoc(doc(db, "users", uid));
+    const token = s.exists() ? s.data().fcm : null;
+    if (!token) return;
+    const idToken = await me.getIdToken();
+    fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken: idToken, token: token, title: title, text: text, kind: kind })
+    });
+  } catch (e) {}
+}
+function myName() { return me.displayName || me.phoneNumber || "বন্ধু"; }
+
+const oldSubmit = $("form").onsubmit;
+$("form").onsubmit = async (e) => {
+  const text = $("txt").value.trim();
+  const to = otherUid;
+  await oldSubmit(e);
+  if (text && to) pushTo(to, myName(), text, "msg");
+};
+
+const oldMedia = $("mediaFile").onchange;
+$("mediaFile").onchange = async (e) => {
+  const f = e.target.files[0];
+  const to = otherUid;
+  await oldMedia(e);
+  if (f && to) pushTo(to, myName(), "📷 ছবি পাঠিয়েছে", "msg");
+};
+
+const oldStartCall = startCall;
+startCall = async function (video) {
+  const to = otherUid;
+  const was = inCall;
+  await oldStartCall(video);
+  if (!was && inCall && to) pushTo(to, myName(), video ? "📹 ভিডিও কল করছে" : "📞 অডিও কল করছে", "call");
+};
   </script>
 </body>
 </html>
