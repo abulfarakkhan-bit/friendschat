@@ -3486,6 +3486,35 @@ pushTo = async function (uid, title, text, kind) {
     alert("পুশের ফল: " + JSON.stringify(j));
   } catch (e) { alert("পুশ যায়নি: " + e.message); }
 };
+ // ===== পুশ পাঠানো: Worker এর সাথে মিলিয়ে =====
+const SHOW_PUSH_RESULT = true;
+pushTo = async function (uid, title, text, kind) {
+  try {
+    if (!uid || !me) return;
+    const s = await getDoc(doc(db, "users", uid));
+    const token = s.exists() ? s.data().fcm : null;
+    if (!token) { if (SHOW_PUSH_RESULT) alert("বন্ধুর ফোনের ঠিকানা জমা নেই। বন্ধুকে নতুন লিংকে ঢুকে Allow দিতে বলো।"); return; }
+    const idToken = await me.getIdToken();
+    const r = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idToken: idToken,
+        from: me.uid,
+        tokens: [token],
+        token: token,
+        title: title,
+        body: text,
+        text: text,
+        type: kind,
+        kind: kind,
+        room: currentRoom || ""
+      })
+    });
+    const t = await r.text();
+    if (SHOW_PUSH_RESULT) alert("পুশের ফল: " + t.slice(0, 300));
+  } catch (e) { if (SHOW_PUSH_RESULT) alert("পুশ যায়নি: " + e.message); }
+};
   </script>
 </body>
 </html>
