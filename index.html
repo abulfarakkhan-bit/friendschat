@@ -3515,6 +3515,69 @@ pushTo = async function (uid, title, text, kind) {
     if (SHOW_PUSH_RESULT) alert("পুশের ফল: " + t.slice(0, 300));
   } catch (e) { if (SHOW_PUSH_RESULT) alert("পুশ যায়নি: " + e.message); }
 };
+ // ===== মোবাইল নম্বর + পাসওয়ার্ড দিয়ে লগইন =====
+(function () {
+  const $ = (i) => document.getElementById(i);
+  const AUTH_URL = "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  const box = $("phoneBox");
+  if (!box) return;
+
+  box.innerHTML =
+    '<input id="phNum" type="tel" inputmode="numeric" placeholder="Mobile number (e.g. 8967712345)" autocomplete="tel">' +
+    '<input id="phPass" type="password" placeholder="Password (min 6 characters)" autocomplete="current-password">' +
+    '<input id="phName" placeholder="Your name (only for Create account)" maxlength="40">' +
+    '<button class="lbtn p" id="phLogin" type="button">Log in</button>' +
+    '<button class="lbtn" id="phCreate" type="button" style="background:#075e54">Create account</button>';
+
+  const norm = (s) => {
+    let d = String(s || "").replace(/\D/g, "").replace(/^0+/, "");
+    if (d.length === 10) d = "91" + d;
+    return d;
+  };
+  const err = (m) => { $("loginErr").textContent = m; };
+  const msg = (e) => {
+    const c = (e && e.code) || "";
+    if (/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c)) return "Wrong number or password. New here? Tap Create account.";
+    if (c === "auth/email-already-in-use") return "This number is already registered. Tap Log in.";
+    if (c === "auth/weak-password") return "Password must be at least 6 characters.";
+    if (c === "auth/operation-not-allowed") return "Email/Password sign-in is not turned on in Firebase yet.";
+    if (c === "auth/network-request-failed") return "No internet connection.";
+    if (c === "auth/too-many-requests") return "Too many tries. Please wait a few minutes.";
+    return (e && e.message) || "Something went wrong.";
+  };
+  function read() {
+    const d = norm($("phNum").value);
+    const p = $("phPass").value;
+    if (d.length < 11 || d.length > 15) { err("Enter a valid mobile number."); return null; }
+    if (p.length < 6) { err("Password must be at least 6 characters."); return null; }
+    return { d: d, email: d + "@phone.friendschat.app", p: p };
+  }
+
+  $("phLogin").onclick = async () => {
+    err("");
+    const x = read(); if (!x) return;
+    try {
+      const A = await import(AUTH_URL);
+      await A.signInWithEmailAndPassword(auth, x.email, x.p);
+    } catch (e) { err(msg(e)); }
+  };
+
+  $("phCreate").onclick = async () => {
+    err("");
+    const x = read(); if (!x) return;
+    const name = $("phName").value.trim();
+    if (!name) { err("Enter your name to create an account."); return; }
+    try {
+      const A = await import(AUTH_URL);
+      const cred = await A.createUserWithEmailAndPassword(auth, x.email, x.p);
+      await A.updateProfile(cred.user, { displayName: name });
+      const ref = doc(db, "users", cred.user.uid);
+      const save = () => setDoc(ref, { uid: cred.user.uid, name: name, phone: x.d }, { merge: true }).catch(() => {});
+      await save();
+      setTimeout(save, 2500);
+    } catch (e) { err(msg(e)); }
+  };
+})();
   </script>
 </body>
 </html>
