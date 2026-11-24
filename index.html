@@ -4,14 +4,16 @@
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Friends Chat App - Chat, Call and Stories with Friends</title>
-<meta name="description" content="Friends Chat is a free chat app for friends. Send messages, photos and voice notes, make calls, and share stories.">
+<title>FarakChat - Free Chat App for Friends</title>
+<meta name="description" content="FarakChat is a free chat app by Farak. Message, call and share stories with your friends.">
 <link rel="canonical" href="https://abulfarakkhan-bit.github.io/friendschat/">
-<meta property="og:title" content="Friends Chat App">
-<meta property="og:description" content="Chat, call and share stories with your friends.">
+<meta property="og:title" content="FarakChat">
+<meta property="og:site_name" content="FarakChat">
+<meta property="og:description" content="Message, call and share stories with your friends on FarakChat.">
 <meta property="og:url" content="https://abulfarakkhan-bit.github.io/friendschat/">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://abulfarakkhan-bit.github.io/friendschat/icon-512.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"FarakChat","alternateName":["Farak Chat","FarakChat App"],"url":"https://abulfarakkhan-bit.github.io/friendschat/"}</script>
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#075e54">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -3491,7 +3493,7 @@ pushTo = async function (uid, title, text, kind) {
       body: JSON.stringify({ idToken: idToken, token: token, title: title, text: text, kind: kind })
     });
     const j = await r.json();
-    alert("পুশের ফল: " + JSON.stringify(j));
+    console.log("পুশের ফল: " + JSON.stringify(j));
   } catch (e) { alert("পুশ যায়নি: " + e.message); }
 };
  // ===== পুশ পাঠানো: Worker এর সাথে মিলিয়ে =====
