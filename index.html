@@ -3597,6 +3597,146 @@ pushTo = async function (uid, title, text, kind) {
     } catch (e) { err(msg(e)); }
   };
 })();
+  // ===== ✏️ ডুডল: আঙুলে এঁকে বন্ধুকে পাঠাও =====
+(function () {
+  const fab = document.createElement("button");
+  fab.textContent = "✏️";
+  fab.style.cssText = "position:fixed;right:14px;bottom:96px;width:46px;height:46px;border-radius:50%;border:none;background:#ffffffee;box-shadow:0 2px 6px rgba(0,0,0,.35);font-size:22px;z-index:7;display:none";
+  document.body.appendChild(fab);
+  setInterval(() => {
+    const open = $("room") && !$("room").classList.contains("hide") && !document.getElementById("doodle");
+    fab.style.display = open ? "block" : "none";
+  }, 500);
+
+  function btn(label, bg, color) {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.type = "button";
+    b.style.cssText = "border:none;border-radius:20px;padding:8px 12px;font-size:15px;background:" + (bg || "#ffffff33") + ";color:" + (color || "#fff");
+    return b;
+  }
+
+  fab.onclick = () => {
+    if (!currentRoom || !me) return;
+    const wrap = document.createElement("div");
+    wrap.id = "doodle";
+    wrap.style.cssText = "position:fixed;inset:0;background:#fff;z-index:40;display:flex;flex-direction:column";
+
+    const top = document.createElement("div");
+    top.style.cssText = "display:flex;gap:8px;align-items:center;padding:10px;background:#075e54;color:#fff";
+    const close = btn("✖", "#ffffff33");
+    const title = document.createElement("div");
+    title.textContent = "ডুডল আঁকো";
+    title.style.cssText = "flex:1;font-weight:bold;font-size:17px";
+    const undo = btn("↩ আন্ডু");
+    const clear = btn("🗑 মুছো");
+    const send = btn("পাঠাও ➤", "#25d366");
+    top.appendChild(close);
+    top.appendChild(title);
+    top.appendChild(undo);
+    top.appendChild(clear);
+    top.appendChild(send);
+
+    const cv = document.createElement("canvas");
+    cv.style.cssText = "flex:1;width:100%;touch-action:none;background:#fff";
+
+    const tools = document.createElement("div");
+    tools.style.cssText = "display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px;background:#f0f0f0";
+    const colors = ["#111111", "#e53935", "#1e88e5", "#43a047", "#fb8c00", "#8e24aa"];
+    let color = colors[0], size = 6, history = [], drawing = false, lx = 0, ly = 0;
+
+    colors.forEach((c) => {
+      const d = document.createElement("button");
+      d.type = "button";
+      d.style.cssText = "width:34px;height:34px;border-radius:50%;border:3px solid #ffffff;box-shadow:0 0 0 1px #999;background:" + c;
+      d.onclick = () => { color = c; };
+      tools.appendChild(d);
+    });
+    const eraser = btn("🧽 রাবার", "#ddd", "#111");
+    eraser.onclick = () => { color = "#ffffff"; };
+    tools.appendChild(eraser);
+    [["•", 3], ["●", 7], ["⬤", 14]].forEach((s) => {
+      const b = btn(s[0], "#ddd", "#111");
+      b.onclick = () => { size = s[1]; };
+      tools.appendChild(b);
+    });
+
+    wrap.appendChild(top);
+    wrap.appendChild(cv);
+    wrap.appendChild(tools);
+    document.body.appendChild(wrap);
+
+    const w = cv.clientWidth, h = cv.clientHeight;
+    cv.width = w;
+    cv.height = h;
+    const g = cv.getContext("2d");
+    g.fillStyle = "#ffffff";
+    g.fillRect(0, 0, w, h);
+    g.lineCap = "round";
+    g.lineJoin = "round";
+
+    function pos(e) {
+      const r = cv.getBoundingClientRect();
+      return [e.clientX - r.left, e.clientY - r.top];
+    }
+    function snap() {
+      history.push(g.getImageData(0, 0, w, h));
+      if (history.length > 20) history.shift();
+    }
+    cv.addEventListener("pointerdown", (e) => {
+      drawing = true;
+      snap();
+      const p = pos(e);
+      lx = p[0];
+      ly = p[1];
+      g.strokeStyle = color;
+      g.lineWidth = color === "#ffffff" ? size * 2 : size;
+      g.beginPath();
+      g.moveTo(lx, ly);
+      g.lineTo(lx + 0.01, ly + 0.01);
+      g.stroke();
+      cv.setPointerCapture(e.pointerId);
+    });
+    cv.addEventListener("pointermove", (e) => {
+      if (!drawing) return;
+      const p = pos(e);
+      g.beginPath();
+      g.moveTo(lx, ly);
+      g.lineTo(p[0], p[1]);
+      g.stroke();
+      lx = p[0];
+      ly = p[1];
+    });
+    ["pointerup", "pointercancel"].forEach((n) => cv.addEventListener(n, () => { drawing = false; }));
+
+    undo.onclick = () => { const last = history.pop(); if (last) g.putImageData(last, 0, 0); };
+    clear.onclick = () => { snap(); g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h); };
+    close.onclick = () => wrap.remove();
+
+    send.onclick = async () => {
+      send.disabled = true;
+      send.textContent = "পাঠানো হচ্ছে...";
+      const sc = Math.min(1, 600 / Math.max(w, h));
+      const out = document.createElement("canvas");
+      out.width = Math.round(w * sc);
+      out.height = Math.round(h * sc);
+      out.getContext("2d").drawImage(cv, 0, 0, out.width, out.height);
+      const url = out.toDataURL("image/jpeg", 0.7);
+      try {
+        await addDoc(collection(db, "rooms", currentRoom, "messages"), {
+          type: "image", url: url, text: "", uid: me.uid,
+          name: me.displayName || me.phoneNumber || "বন্ধু", createdAt: serverTimestamp()
+        });
+        if (typeof pushTo === "function" && otherUid) pushTo(otherUid, me.displayName || "বন্ধু", "✏️ ডুডল পাঠিয়েছে", "msg");
+        wrap.remove();
+      } catch (err) {
+        alert("ডুডল যায়নি: " + err.message);
+        send.disabled = false;
+        send.textContent = "পাঠাও ➤";
+      }
+    };
+  };
+})();
   </script>
 </body>
 </html>
