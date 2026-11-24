@@ -4,7 +4,16 @@
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>FarakChat - Free Chat App for Friends</title>
+<script>
+(function () {
+  var orig = window.alert;
+  window.alert = function (m) {
+    if (typeof m === "string" && m.indexOf("পুশের ফল") === 0) return;
+    return orig.apply(window, arguments);
+  };
+})();
+</script>
+  <title>FarakChat - Free Chat App for Friends</title>
 <meta name="description" content="FarakChat is a free chat app by Farak. Message, call and share stories with your friends.">
 <link rel="canonical" href="https://abulfarakkhan-bit.github.io/friendschat/">
 <meta property="og:title" content="FarakChat">
