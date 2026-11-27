@@ -3853,6 +3853,65 @@ pushTo = async function (uid, title, text, kind) {
     render();
   };
 })();
+ // ===== 🎙 গেমের ভেতরে লাইভ কথা (অডিও কল দিয়ে) =====
+(function () {
+  const st = document.createElement("style");
+  st.textContent = "#incoming{z-index:60!important}";
+  document.head.appendChild(st);
+
+  function mk(label, bg) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.style.cssText = "border:none;border-radius:24px;padding:11px 18px;font-size:16px;color:#fff;background:" + bg;
+    return b;
+  }
+
+  function addBar(game) {
+    const bar = document.createElement("div");
+    bar.id = "tttVoice";
+    bar.style.cssText = "display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:auto;padding:12px 12px calc(env(safe-area-inset-bottom,0px) + 14px);background:#f0f0f0";
+    const info = document.createElement("div");
+    info.style.cssText = "width:100%;text-align:center;font-size:15px;color:#075e54";
+    const talk = mk("🎤 কথা বলো", "#25d366");
+    const mute = mk("🔇 মিউট", "#607d8b");
+    const end = mk("📞 কেটে দাও", "#e53935");
+    bar.appendChild(info);
+    bar.appendChild(talk);
+    bar.appendChild(mute);
+    bar.appendChild(end);
+    game.appendChild(bar);
+
+    talk.onclick = () => {
+      try { startCall(false); } catch (e) { alert("কল শুরু হয়নি: " + e.message); }
+    };
+    mute.onclick = () => {
+      const t = localStream && localStream.getAudioTracks()[0];
+      if (t) t.enabled = !t.enabled;
+    };
+    end.onclick = () => {
+      try { endCall(true); } catch (e) {}
+    };
+
+    const timer = setInterval(() => {
+      if (!document.getElementById("tttVoice")) { clearInterval(timer); return; }
+      const t = localStream && localStream.getAudioTracks ? localStream.getAudioTracks()[0] : null;
+      const live = pc && (pc.connectionState === "connected" || pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed");
+      talk.style.display = inCall ? "none" : "inline-block";
+      mute.style.display = inCall ? "inline-block" : "none";
+      end.style.display = inCall ? "inline-block" : "none";
+      mute.textContent = t && !t.enabled ? "🎙 মিউট বন্ধ করো" : "🔇 মিউট";
+      info.textContent = !inCall
+        ? "খেলার সাথে কথা বলতে 🎤 চাপো (বন্ধুকে কল ধরতে হবে)"
+        : (live ? "🔊 কথা চলছে" : "📞 কানেক্ট হচ্ছে...");
+    }, 500);
+  }
+
+  new MutationObserver(() => {
+    const g = document.getElementById("ttt");
+    if (g && !document.getElementById("tttVoice")) addBar(g);
+  }).observe(document.body, { childList: true });
+})();
   </script>
 </body>
 </html>
